@@ -86,6 +86,7 @@ const Menu = React.forwardRef((props, ref) => {
     />
   );
 });
+Menu.displayName = 'Menu'
 
 Menu.propTypes = {
   slotProps: PropTypes.shape({
@@ -107,6 +108,7 @@ const MenuButton = React.forwardRef((props, ref) => {
     />
   );
 });
+MenuButton.displayName= 'Menubutton'
 
 MenuButton.propTypes = {
   className: PropTypes.string,
@@ -125,6 +127,7 @@ const MenuItem = React.forwardRef((props, ref) => {
     />
   );
 });
+MenuItem.displayName = 'Menu Item';
 
 MenuItem.propTypes = {
   className: PropTypes.string,

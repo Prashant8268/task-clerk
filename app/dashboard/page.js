@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import CreateWorkspaceModal from '../_components/CreateWorkspace';
+import CreateWorkspaceModal from '../(components)/CreateWorkspace';
 
 export default function Dashboard1() {
     console.log('hey there');

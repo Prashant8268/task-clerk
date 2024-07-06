@@ -3,21 +3,27 @@ import Link from 'next/link';
 import { MenuIcon } from '@heroicons/react/outline';
 
 export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
-  const sidebarRef = useRef(null);
+  const sidebarRef = useRef(null); // Ref to the sidebar container
 
+  // Function to handle clicks outside sidebar
+  const handleClickOutside = (event) => {
+    if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+      toggleSidebar(); // Toggle sidebar if clicking outside
+    }
+  };
+
+  // Effect to add event listener for clicks outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        toggleSidebar();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
+    if (isSidebarOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [toggleSidebar]); // Include toggleSidebar in the dependency array
+  }, [isSidebarOpen]);
 
   return (
     <>

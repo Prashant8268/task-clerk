@@ -129,5 +129,5 @@ const MenuItem = React.forwardRef((props, ref) => {
 MenuItem.propTypes = {
   className: PropTypes.string,
 };
-
+MenuSimple.displayName = 'SimpleMenu';
 export default MenuSimple;

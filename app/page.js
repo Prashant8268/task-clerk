@@ -10,7 +10,7 @@ const LandingPage = () => {
           Manage your tasks efficiently with real-time updates and intelligent features.
         </p>
         <Link href="/dashboard" className="bg-white text-purple-600 font-semibold py-2 px-4 rounded-full shadow-lg hover:bg-gray-100 transition duration-300 ease-in-out">
-            Get Started
+          Get Started
         </Link>
       </section>
 
@@ -29,7 +29,7 @@ const LandingPage = () => {
             </div>
             <div className="bg-gray-100 p-6 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300 ease-in-out">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">Customizable Workflows</h3>
-              <p className="text-gray-600">Create and manage workflows tailored to your team's needs.</p>
+              <p className="text-gray-600">Create and manage workflows tailored to your team&apos;s needs.</p>
             </div>
           </div>
         </div>
@@ -48,5 +48,5 @@ const LandingPage = () => {
     </div>
   );
 };
-
+LandingPage.displayName = 'LandingPage';
 export default LandingPage;

@@ -54,3 +54,4 @@ export default function CreateWorkspaceModal({ isOpen, onClose, onCreate }) {
         </div>
     );
 }
+CreateWorkspaceModal.displayName = 'createWorkspaceModal';

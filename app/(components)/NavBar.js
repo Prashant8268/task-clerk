@@ -121,4 +121,5 @@ const Navbar = () => {
   );
 };
 
+Navbar.displayName = 'NavBar';
 export default Navbar;

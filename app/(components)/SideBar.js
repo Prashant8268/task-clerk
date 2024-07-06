@@ -6,11 +6,22 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
   const sidebarRef = useRef(null); // Ref to the sidebar container
 
   // Function to handle clicks outside sidebar
+  const handleClickOutside = (event) => {
+    if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+      toggleSidebar(); 
+    }
+      // Handle click outside logic
+  };
   useEffect(() => {
     const handleClickOutside = (event) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
         toggleSidebar(); 
+      }
+        // Handle click outside logic
     };
+
     document.addEventListener('click', handleClickOutside);
+    
     return () => {
         document.removeEventListener('click', handleClickOutside);
     };

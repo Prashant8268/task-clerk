@@ -22,8 +22,9 @@ const dummyTasks = [
     // Add other tasks similarly
 ];
 
-const Workspace = ({ params }) => {
+const Workspace = ({params, currentUser}) => {
     const { id } = params;
+    console.log(currentUser, 'current user'); 
 
     const [tasks, setTasks] = useState([]);
     const [editableTaskId, setEditableTaskId] = useState(null);

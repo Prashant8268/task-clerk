@@ -1,60 +1,70 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-
-// Dummy data for tasks (for initial rendering)
-const dummyTasks = [
-    { 
-        id: 1, 
-        name: 'Task 1', 
-        description: 'Task description 1', 
-        deadline: '2023-07-10', 
-        priority: 'high', 
-        status: 'done', 
-        cards: [
-            { id: 1, text: 'Card 1 for Task 1' },
-            { id: 2, text: 'Card 2 for Task 1' },
-        ], 
-        workspaceId: 1,
-        newCardText: '', // Added for task-specific new card text
-        newCardTextError: '', // Added for task-specific new card text error
-    },
-    // Add other tasks similarly
-];
+import io from 'socket.io-client';
+import LoadingSpinner from '@/app/(components)/Spinner';
 
 const Workspace = ({params, currentUser}) => {
     const { id } = params;
     console.log(currentUser, 'current user'); 
 
     const [tasks, setTasks] = useState([]);
+    const [workspaceName , setWorkspaceName] = useState('');
     const [editableTaskId, setEditableTaskId] = useState(null);
     const [newTaskModalOpen, setNewTaskModalOpen] = useState(false);
     const [newTaskName, setNewTaskName] = useState('');
     const [newTaskDeadline, setNewTaskDeadline] = useState('');
     const [loading, setLoading] = useState(false);
     const [newTaskNameError, setNewTaskNameError] = useState('');
+    const SOCKET_SERVER_URL = 'http://localhost:3001';
 
+    // Connect to the Socket.io server
+
+  
     useEffect(() => {
         fetchTasks();
     }, []);
 
+    const socket = useMemo(() => io(SOCKET_SERVER_URL), []);
+    
+    useEffect(() => {
+        // Listen for task updates from the server
+        socket.on('connection',()=>{
+            console.log('socket connected')
+        })
+        socket.on('taskUpdated', (updatedTask) => {
+            setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
+        });
+
+        // Listen for task deletions from the server
+        socket.on('taskDeleted', (deletedTaskId) => {
+            setTasks(tasks.filter(task => task.id !== deletedTaskId));
+        });
+
+        // Clean up the socket connection when component unmounts
+        return () => {
+            socket.disconnect();
+        };
+    }, [tasks, socket]);
+  
+
     const fetchTasks = async () => {
-        try {
-            setLoading(true);
-            // Simulate fetching tasks from backend (replace with actual API endpoint)
-            // Example API call: const response = await axios.get(`/api/tasks/${id}`);
-            setTasks(dummyTasks);
-            setLoading(false);
-        } catch (error) {
-            console.error('Error fetching tasks:', error);
-            setLoading(false);
-        }
+      try {
+        setLoading(true);
+        const response = await axios.get(`/api/tasks/${id}`);
+        setTasks(response.data.tasks);
+        setWorkspaceName(response.data.workspaceName);
+        setLoading(false); 
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
     };
+  
 
     const handleTaskNameEdit = async (taskId, newName) => {
         try {
-            // Simulate updating task name on backend (replace with actual API endpoint)
-            // Example API call: const response = await axios.put(`/api/tasks/${taskId}`, { name: newName });
+            // Replace with actual API endpoint
+            await axios.put(`/api/tasks/${taskId}`, { name: newName });
             setTasks(tasks.map(task => task.id === taskId ? { ...task, name: newName } : task));
         } catch (error) {
             console.error('Error updating task name:', error);
@@ -63,8 +73,8 @@ const Workspace = ({params, currentUser}) => {
 
     const handleTaskDeadlineEdit = async (taskId, newDeadline) => {
         try {
-            // Simulate updating task deadline on backend (replace with actual API endpoint)
-            // Example API call: const response = await axios.put(`/api/tasks/${taskId}`, { deadline: newDeadline });
+            // Replace with actual API endpoint
+            await axios.put(`/api/tasks/${taskId}`, { deadline: newDeadline });
             setTasks(tasks.map(task => task.id === taskId ? { ...task, deadline: newDeadline } : task));
         } catch (error) {
             console.error('Error updating task deadline:', error);
@@ -72,36 +82,25 @@ const Workspace = ({params, currentUser}) => {
     };
 
     const handleAddCard = async (taskId) => {
-        const taskIndex = tasks.findIndex(task => task.id === taskId);
-        if (taskIndex !== -1) {
-            const currentTask = tasks[taskIndex];
-            const { newCardText } = currentTask;
-
-            if (newCardText.trim() !== '') {
-                try {
-                    // Simulate adding a card to task on backend (replace with actual API endpoint)
-                    // Example API call: const response = await axios.put(`/api/tasks/add-card/${taskId}`, { card: newCardText });
-                    const updatedCards = [...currentTask.cards, { id: currentTask.cards.length + 1, text: newCardText }];
-                    const updatedTask = { ...currentTask, cards: updatedCards, newCardText: '', newCardTextError: '' };
-                    const updatedTasks = [...tasks];
-                    updatedTasks[taskIndex] = updatedTask;
-                    setTasks(updatedTasks);
-                } catch (error) {
-                    console.error('Error adding card:', error);
+        try {
+            // Replace with actual API endpoint
+            await axios.put(`/api/tasks/add-card/${taskId}`, { card: 'New Card' });
+            const updatedTasks = tasks.map(task => {
+                if (task.id === taskId) {
+                    return { ...task, cards: [...task.cards, { id: task.cards.length + 1, text: 'New Card' }] };
                 }
-            } else {
-                const updatedTask = { ...currentTask, newCardTextError: 'Card text cannot be empty. Please enter some text.' };
-                const updatedTasks = [...tasks];
-                updatedTasks[taskIndex] = updatedTask;
-                setTasks(updatedTasks);
-            }
+                return task;
+            });
+            setTasks(updatedTasks);
+        } catch (error) {
+            console.error('Error adding card:', error);
         }
     };
 
     const handleDeleteTask = async (taskId) => {
         try {
-            // Simulate deleting task on backend (replace with actual API endpoint)
-            // Example API call: const response = await axios.delete(`/api/tasks/${taskId}`);
+            // Replace with actual API endpoint
+            await axios.delete(`/api/tasks/${taskId}`);
             setTasks(tasks.filter(task => task.id !== taskId));
         } catch (error) {
             console.error('Error deleting task:', error);
@@ -113,46 +112,39 @@ const Workspace = ({params, currentUser}) => {
     };
 
     const handleAddNewTask = async () => {
-        if (newTaskName.trim() !== '' && newTaskDeadline.trim() !== '') {
-            try {
-                // Simulate adding new task on backend (replace with actual API endpoint)
-                // Example API call: const response = await axios.post('/api/tasks', { name: newTaskName, deadline: newTaskDeadline, status: 'pending', cards: [], workspaceId: id });
-                const newTask = {
-                    id: tasks.length + 1,
-                    name: newTaskName,
-                    description: '',
-                    deadline: newTaskDeadline,
-                    priority: 'low',
-                    status: 'pending',
-                    cards: [],
-                    workspaceId: id,
-                    newCardText: '', // Added for task-specific new card text
-                    newCardTextError: '', // Added for task-specific new card text error
-                };
-                setTasks([...tasks, newTask]);
-                setNewTaskName('');
-                setNewTaskDeadline('');
-                setNewTaskModalOpen(false);
-                setNewTaskNameError('');
-            } catch (error) {
-                console.error('Error adding new task:', error);
-            }
-        } else {
-            setNewTaskNameError('Task name cannot be empty. Please enter a name.');
+        try {
+            // Replace with actual API endpoint
+            const response = await axios.post('/api/tasks', {
+                name: newTaskName,
+                description: '',
+                deadline: newTaskDeadline,
+                priority: 'low',
+                status: 'pending',
+                cards: [],
+                workspaceId: id,
+            });
+            setTasks([...tasks, response.data.newTask]);
+            setNewTaskName('');
+            setNewTaskDeadline('');
+            setNewTaskModalOpen(false);
+            setNewTaskNameError('');
+        } catch (error) {
+            console.error('Error adding new task:', error);
         }
     };
 
     const handleDeleteCard = async (taskId, cardIndex) => {
         try {
-            const taskIndex = tasks.findIndex(task => task.id === taskId);
-            if (taskIndex !== -1) {
-                const currentTask = tasks[taskIndex];
-                const updatedCards = currentTask.cards.filter((_, index) => index !== cardIndex);
-                const updatedTask = { ...currentTask, cards: updatedCards };
-                const updatedTasks = [...tasks];
-                updatedTasks[taskIndex] = updatedTask;
-                setTasks(updatedTasks);
-            }
+            // Replace with actual API endpoint
+            await axios.delete(`/api/tasks/${taskId}/cards/${cardIndex}`);
+            const updatedTasks = tasks.map(task => {
+                if (task.id === taskId) {
+                    const updatedCards = task.cards.filter((_, index) => index !== cardIndex);
+                    return { ...task, cards: updatedCards };
+                }
+                return task;
+            });
+            setTasks(updatedTasks);
         } catch (error) {
             console.error('Error deleting card:', error);
         }
@@ -163,8 +155,14 @@ const Workspace = ({params, currentUser}) => {
     };
 
     return (
-        <div className="p-2  h-screen overflow-scroll">
-            <h1 className="text-2xl font-bold mb-6">Tasks for Workspace {id}</h1>
+        <div className="p-2 h-screen overflow-scroll">
+            <h1 className="text-3xl font-bold mb-6 text-gray-800">
+            <span className="block text-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text">
+                {workspaceName} 
+            </span>{' '}
+            <span className="block text-center text-3xl font-bold text-gray-900">All Tasks</span>
+            </h1>
+            {loading?<LoadingSpinner />: null}
             <button
                 onClick={toggleNewTaskModal}
                 className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none mb-4"
@@ -270,8 +268,7 @@ const Workspace = ({params, currentUser}) => {
                                     value={task.newCardText}
                                     onChange={(e) => {
                                         const updatedTask = { ...task, newCardText: e.target.value };
-                                        const updatedTasks = [...tasks];
-                                        updatedTasks[tasks.findIndex(t => t.id === task.id)] = updatedTask;
+                                        const updatedTasks = tasks.map(t => t.id === task.id ? updatedTask : t);
                                         setTasks(updatedTasks);
                                     }}
                                     placeholder="Add a card..."

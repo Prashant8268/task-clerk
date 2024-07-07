@@ -1,5 +1,7 @@
 // models/Workspace.js
 import mongoose from 'mongoose';
+import Task from './Task';
+import User from './User';
 
 const workspaceSchema = new mongoose.Schema({
     name: {

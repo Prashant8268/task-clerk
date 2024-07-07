@@ -61,29 +61,29 @@ export default function Dashboard1() {
                         </tr>
                     </thead>
                     <tbody>
-                    {workspaces.map((workspace) => (
-                    <tr key={workspace._id} className="hover:bg-gray-50 cursor-pointer">
-                        <td className="py-2 px-4 border-b text-left">
-                            <Link href={`/dashboard/${workspace._id}`}>
-                                {workspace.name}
-                            </Link>
-                        </td>
-                        <td className="py-2 px-4 border-b text-left">
-                            <Link href={`/dashboard/${workspace._id}`}>
-                                {workspace.admin.name}
-                            </Link>
-                        </td>
-                        <td className="py-2 px-4 border-b text-left">
-                            <Link href={`/dashboard/${workspace._id}`}>
-                                {workspace.createdAt}
-                            </Link>
-                        </td>
-                    </tr>
-                ))}
-
+                        {workspaces.map((workspace) => (
+                            <tr key={workspace._id} className="hover:bg-gray-50 cursor-pointer">
+                                <td className="py-2 px-4 border-b text-left">
+                                    <Link href={`/dashboard/${workspace._id}`}>
+                                        {workspace.name}
+                                    </Link>
+                                </td>
+                                <td className="py-2 px-4 border-b text-left">
+                                    <Link href={`/dashboard/${workspace._id}`}>
+                                        {workspace.admin.name}
+                                    </Link>
+                                </td>
+                                <td className="py-2 px-4 border-b text-left">
+                                    <Link href={`/dashboard/${workspace._id}`}>
+                                        {workspace.createdAt}
+                                    </Link>
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
+
             <CreateWorkspaceModal
                 isOpen={isModalOpen}
                 onClose={closeModal}

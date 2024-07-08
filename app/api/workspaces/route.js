@@ -12,7 +12,7 @@ export  async function GET(req, res) {
     try {
         const { userId } = getAuth(req);
         if (!userId) {
-            return res.status(401).json({ error: "Unauthorized" });
+            return NextResponse.json({ error: "Unauthorized" });
           }
     
         const user = await clerkClient().users.getUser(userId);

@@ -14,6 +14,7 @@ export  async function POST(req, res) {
             if (!userId) {
                 return NextResponse.json({message: 'Unauthorized'}, {status:401})
               }
+            const body = await req.json();
             const {workspace} = body;
             const existedUser = await clerkClient().users.getUser(userId);
             const userId1 = existedUser.id;

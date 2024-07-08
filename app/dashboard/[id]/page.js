@@ -1,317 +1,272 @@
 'use client'
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
 import LoadingSpinner from '@/app/(components)/Spinner';
+import AddCollaboratorsModal from '@/app/(components)/AddCollaboratorsModal';
+import NewTaskModal from '@/app/(components)/NewTaskModal';
+import AddViewsModal from '@/app/(components)/AddViewsModal';
+import TaskCard from '@/app/(components)/TaskCard';
 
-const Workspace = ({params, currentUser}) => {
-    const { id } = params;
-    console.log(currentUser, 'current user'); 
+const Workspace = ({ params }) => {
+  const { id } = params;
+  const [tasks, setTasks] = useState([]);
+  const [workspaceName, setWorkspaceName] = useState('');
+  const [showOptions, setShowOptions] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [newTaskModalOpen, setNewTaskModalOpen] = useState(false);
+  const [newCollaboratorsModalOpen, setNewCollaboratorsModalOpen] = useState(false);
+  const [newViewsModalOpen, setNewViewsModalOpen] = useState(false);
+  const [showDeleteWorkspaceModal, setShowDeleteWorkspaceModal] = useState(false);
+  const [newTaskName, setNewTaskName] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
+  const [newTaskDeadline, setNewTaskDeadline] = useState('');
+  const SOCKET_SERVER_URL = 'https://task-clerk-backend.onrender.com';
+  const socket = io(SOCKET_SERVER_URL);
+  // Connect to the Socket.io server
+  useEffect(() => {
+    socket.on('taskUpdated', (updatedTask) => {
+      setTasks((prevTasks) => prevTasks.map(task => task._id === updatedTask._id ? updatedTask : task));
+    });
+    socket.on('taskDescriptionUpdated', (updatedTask)=>{
+        setTasks((prevTasks)=> prevTasks.map(task => task._id ===updatedTask._id? updatedTask: task ));
+    })
+    socket.on('taskDeleted', (deletedTaskId) => {
+      setTasks((prevTasks) => prevTasks.filter(task => task._id !== deletedTaskId));
+    });
 
-    const [tasks, setTasks] = useState([]);
-    const [workspaceName , setWorkspaceName] = useState('');
-    const [editableTaskId, setEditableTaskId] = useState(null);
-    const [newTaskModalOpen, setNewTaskModalOpen] = useState(false);
-    const [newTaskName, setNewTaskName] = useState('');
-    const [newTaskDeadline, setNewTaskDeadline] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [newTaskNameError, setNewTaskNameError] = useState('');
-    const SOCKET_SERVER_URL = 'http://localhost:3001';
-
-    // Connect to the Socket.io server
-
-  
-    useEffect(() => {
-        fetchTasks();
-    }, []);
-
-    const socket = useMemo(() => io(SOCKET_SERVER_URL), []);
-    
-    useEffect(() => {
-        // Listen for task updates from the server
-        socket.on('connection',()=>{
-            console.log('socket connected')
+    socket.on('taskAdded', (newTask) => {
+      setTasks((prevTasks) => [...prevTasks, newTask]);
+    });
+    socket.on('cardAdded', ({ taskId, newCard }) => {
+      setTasks((prevTasks) =>
+        prevTasks.map(task => {
+          if (task._id === taskId) {
+            return { ...task, cards: [...task.cards, newCard] };
+          }
+          return task;
         })
-        socket.on('taskUpdated', (updatedTask) => {
-            setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
-        });
+      );
+    });
 
-        // Listen for task deletions from the server
-        socket.on('taskDeleted', (deletedTaskId) => {
-            setTasks(tasks.filter(task => task.id !== deletedTaskId));
-        });
+    socket.on('cardDeleted', ({ taskId, cardIndex }) => {
+      setTasks((prevTasks) =>
+        prevTasks.map(task => {
+          if (task._id === taskId) {
+            return { ...task, cards: task.cards.filter((_, index) => index !== cardIndex) };
+          }
+          return task;
+        })
+      );
+    });
 
-        // Clean up the socket connection when component unmounts
-        return () => {
-            socket.disconnect();
-        };
-    }, [tasks, socket]);
-  
-
-    const fetchTasks = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`/api/tasks/${id}`);
-        setTasks(response.data.tasks);
-        setWorkspaceName(response.data.workspaceName);
-        setLoading(false); 
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
-      }
+    return () => {
+      socket.disconnect();
     };
-  
+  }, [socket]);
 
-    const handleTaskNameEdit = async (taskId, newName) => {
-        try {
-            // Replace with actual API endpoint
-            await axios.put(`/api/tasks/${taskId}`, { name: newName });
-            setTasks(tasks.map(task => task.id === taskId ? { ...task, name: newName } : task));
-        } catch (error) {
-            console.error('Error updating task name:', error);
-        }
+  const fetchTasks = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`/api/tasks/${id}`);
+      console.log('rtasks',response.data.tasks);
+      setTasks(response.data.tasks);
+      setWorkspaceName(response.data.workspaceName);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
+// working 
+  const handleTaskNameEdit = async (taskId, newName) => {
+    try {
+      socket.emit('editTask', { id: taskId, name: newName });
+
+    } catch (error) {
+      console.error('Error updating task name:', error);
+    }
+  };
+
+
+  const handleTaskDescriptionEdit = async(taskId, newDescription ) =>{
+    try{
+        socket.emit('editTaskDescription',{id: taskId , description: newDescription});
+    } catch(err){
+        console.log('Error in updating description');
+    }
+
+  }
+
+  const handleTaskDeadlineEdit = async (taskId, newDeadline) => {
+    try {
+      socket.emit('updateTask', { id: taskId, deadline: newDeadline });
+    } catch (error) {
+      console.error('Error updating task deadline:', error);
+    }
+  };
+
+  const handleAddCard = async (taskId) => {
+    try {
+      const newCard = { id: Date.now(), text: 'New Card' };
+      socket.emit('addCard', { taskId, newCard });
+    } catch (error) {
+      console.error('Error adding card:', error);
+    }
+  };
+
+//   working 
+  const handleDeleteTask = async (taskId) => {
+    try {
+      socket.emit('deleteTask', { id: taskId });
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  };
+// working 
+  const handleAddNewTask = () => {
+    const newTask = {
+      name: newTaskName,
+      description: newTaskDescription,
+      deadline: newTaskDeadline,
+      priority: 'low',
+      status: 'pending',
+      cards: [],
+      workspaceId: id,
     };
+    socket.emit('addTask', newTask,);
+    setNewTaskDescription('');
+    setNewTaskName('');
+    setNewTaskDeadline('');
+    setNewTaskModalOpen(false);
+  };
 
-    const handleTaskDeadlineEdit = async (taskId, newDeadline) => {
-        try {
-            // Replace with actual API endpoint
-            await axios.put(`/api/tasks/${taskId}`, { deadline: newDeadline });
-            setTasks(tasks.map(task => task.id === taskId ? { ...task, deadline: newDeadline } : task));
-        } catch (error) {
-            console.error('Error updating task deadline:', error);
-        }
-    };
 
-    const handleAddCard = async (taskId) => {
-        try {
-            // Replace with actual API endpoint
-            await axios.put(`/api/tasks/add-card/${taskId}`, { card: 'New Card' });
-            const updatedTasks = tasks.map(task => {
-                if (task.id === taskId) {
-                    return { ...task, cards: [...task.cards, { id: task.cards.length + 1, text: 'New Card' }] };
-                }
-                return task;
-            });
-            setTasks(updatedTasks);
-        } catch (error) {
-            console.error('Error adding card:', error);
-        }
-    };
 
-    const handleDeleteTask = async (taskId) => {
-        try {
-            // Replace with actual API endpoint
-            await axios.delete(`/api/tasks/${taskId}`);
-            setTasks(tasks.filter(task => task.id !== taskId));
-        } catch (error) {
-            console.error('Error deleting task:', error);
-        }
-    };
+  const handleDeleteCard = async (taskId, cardIndex) => {
+    try {
+      socket.emit('deleteCard', { taskId, cardIndex });
+    } catch (error) {
+      console.error('Error deleting card:', error);
+    }
+  };
 
-    const toggleNewTaskModal = () => {
-        setNewTaskModalOpen(!newTaskModalOpen);
-    };
+  const toggleNewTaskModal = () => setNewTaskModalOpen(!newTaskModalOpen);
+  const toggleNewCollaboratorsModal = () => setNewCollaboratorsModalOpen(!newCollaboratorsModalOpen);
+  const toggleNewViewsModal = () => setNewViewsModalOpen(!newViewsModalOpen);
+  const toggleDeleteWorkspaceModal = () => setShowDeleteWorkspaceModal(!showDeleteWorkspaceModal);
 
-    const handleAddNewTask = async () => {
-        try {
-            // Replace with actual API endpoint
-            const response = await axios.post('/api/tasks', {
-                name: newTaskName,
-                description: '',
-                deadline: newTaskDeadline,
-                priority: 'low',
-                status: 'pending',
-                cards: [],
-                workspaceId: id,
-            });
-            setTasks([...tasks, response.data.newTask]);
-            setNewTaskName('');
-            setNewTaskDeadline('');
-            setNewTaskModalOpen(false);
-            setNewTaskNameError('');
-        } catch (error) {
-            console.error('Error adding new task:', error);
-        }
-    };
+//   
+  const handleDeleteWorkspace = async () => {
+    try {
+      console.log('Workspace deleted successfully');
+      // Optionally redirect or update UI after deletion
+    } catch (error) {
+      console.error('Error deleting workspace:', error);
+    }
+  };
 
-    const handleDeleteCard = async (taskId, cardIndex) => {
-        try {
-            // Replace with actual API endpoint
-            await axios.delete(`/api/tasks/${taskId}/cards/${cardIndex}`);
-            const updatedTasks = tasks.map(task => {
-                if (task.id === taskId) {
-                    const updatedCards = task.cards.filter((_, index) => index !== cardIndex);
-                    return { ...task, cards: updatedCards };
-                }
-                return task;
-            });
-            setTasks(updatedTasks);
-        } catch (error) {
-            console.error('Error deleting card:', error);
-        }
-    };
-
-    const showOptions = (taskId) => {
-        console.log(`Options for task ${taskId}`);
-    };
-
-    return (
-        <div className="p-2 h-screen overflow-scroll">
-            <h1 className="text-3xl font-bold mb-6 text-gray-800">
-            <span className="block text-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text">
-                {workspaceName} 
-            </span>{' '}
-            <span className="block text-center text-3xl font-bold text-gray-900">All Tasks</span>
-            </h1>
-            {loading?<LoadingSpinner />: null}
-            <button
-                onClick={toggleNewTaskModal}
-                className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none mb-4"
-            >
-                Add New Task
-            </button>
-
-            {newTaskModalOpen && (
-                <div className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-md max-w-md">
-                        <h2 className="text-xl font-bold mb-4">Add New Task</h2>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Task Name</label>
-                            <input
-                                type="text"
-                                value={newTaskName}
-                                onChange={(e) => setNewTaskName(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
-                            />
-                            {newTaskNameError && <p className="text-red-500 mt-1">{newTaskNameError}</p>}
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Deadline</label>
-                            <input
-                                type="date"
-                                value={newTaskDeadline}
-                                onChange={(e) => setNewTaskDeadline(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
-                            />
-                        </div>
-                        <div className="flex justify-end">
-                            <button
-                                onClick={handleAddNewTask}
-                                className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none"
-                            >
-                                Add Task
-                            </button>
-                            <button
-                                onClick={toggleNewTaskModal}
-                                className="ml-2 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {loading ? (
-                    <p>Loading...</p>
-                ) : tasks.length === 0 ? (
-                    <p>No tasks found.</p>
-                ) : (
-                    tasks.map(task => (
-                        <div key={task.id} className="bg-white p-4 rounded-lg shadow-md">
-                            <div className="mb-2">
-                                <h2 className="text-lg font-semibold">
-                                    <input
-                                        type="text"
-                                        value={task.name}
-                                        onChange={(e) => handleTaskNameEdit(task.id, e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
-                                    />
-                                </h2>
-                                {task.name.trim() === '' && <p className="text-red-500 mt-1">Task name cannot be empty.</p>}
-                            </div>
-
-                            <div className="mb-2">
-                                <p className="text-gray-600">
-                                    Deadline:{" "}
-                                    <input
-                                        type="date"
-                                        value={task.deadline}
-                                        onChange={(e) => handleTaskDeadlineEdit(task.id, e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
-                                    />
-                                </p>
-                            </div>
-                            <div className="overflow-y-auto max-h-48 mt-4">
-                                <ul>
-                                    {task.cards.map((card, index) => (
-                                        <li key={index} className="flex items-center justify-between mb-2">
-                                            <span>{card.text}</span>
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-6 w-6 text-gray-500 cursor-pointer"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                                onClick={() => handleDeleteCard(task.id, index)}
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            <div className="mt-4">
-                                <input
-                                    type="text"
-                                    value={task.newCardText}
-                                    onChange={(e) => {
-                                        const updatedTask = { ...task, newCardText: e.target.value };
-                                        const updatedTasks = tasks.map(t => t.id === task.id ? updatedTask : t);
-                                        setTasks(updatedTasks);
-                                    }}
-                                    placeholder="Add a card..."
-                                    className="w-full py-1 px-2 border border-gray-300 rounded-md focus:outline-none"
-                                />
-                                {task.newCardTextError && <p className="text-red-500 mt-1">{task.newCardTextError}</p>}
-                                <button
-                                    onClick={() => handleAddCard(task.id)}
-                                    className="mt-2 py-1 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none"
-                                >
-                                    Add Card
-                                </button>
-                            </div>
-
-                            <div className="mt-4 text-gray-500 cursor-pointer">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-6 w-6 inline-block align-middle"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    onClick={() => showOptions(task.id)}
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                    />
-                                </svg>
-                                <button
-                                    onClick={() => handleDeleteTask(task.id)}
-                                    className="ml-2 text-red-500 hover:text-red-700 focus:outline-none"
-                                >
-                                    Delete Task
-                                </button>
-                            </div>
-                        </div>
-                    ))
-                )}
+  return (
+    <div className="p-2 h-screen overflow-scroll">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">
+        <span className="block text-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text">
+          {workspaceName}
+        </span>{' '}
+        <span className="block text-center text-3xl font-bold text-gray-900">All Tasks</span>
+      </h1>
+      {loading && <LoadingSpinner />}
+      <div className="flex flex-wrap space-y-2 md:space-y-0 md:space-x-4 mb-4">
+        <button
+          onClick={toggleNewTaskModal}
+          className="w-full md:w-auto bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none"
+        >
+          Add New Task
+        </button>
+        <button
+          onClick={toggleNewCollaboratorsModal}
+          className="w-full md:w-auto bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none mt-2 md:mt-0"
+        >
+          Add New Collaborators
+        </button>
+        <button
+          onClick={toggleNewViewsModal}
+          className="w-full md:w-auto bg-purple-500 text-white py-2 px-4 rounded-md hover:bg-purple-600 focus:outline-none mt-2 md:mt-0"
+        >
+          New Views
+        </button>
+        <button
+          onClick={toggleDeleteWorkspaceModal}
+          className="w-full md:w-auto bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none mt-2 md:mt-0"
+        >
+          Delete Workspace
+        </button>
+        {showDeleteWorkspaceModal && (
+          <div className="fixed z-10 inset-0 overflow-y-auto flex items-center justify-center">
+            <div className="bg-white rounded-lg p-6 shadow-lg">
+              <p className="text-lg mb-4">Are you sure you want to delete this workspace?</p>
+              <div className="flex justify-end">
+                <button
+                  onClick={toggleDeleteWorkspaceModal}
+                  className="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none mr-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteWorkspace}
+                  className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
+          </div>
+        )}
+      </div>
+
+      <AddCollaboratorsModal
+        collaborators={[]}
+        newCollaboratorsModalOpen={newCollaboratorsModalOpen}
+        toggleNewCollaboratorsModal={toggleNewCollaboratorsModal}
+      />
+      <NewTaskModal
+        newTaskModalOpen={newTaskModalOpen}
+        toggleNewTaskModal={toggleNewTaskModal}
+        newTaskName={newTaskName}
+        setNewTaskName={setNewTaskName}
+        newTaskDeadline={newTaskDeadline}
+        setNewTaskDeadline={setNewTaskDeadline}
+        handleAddNewTask={handleAddNewTask}
+        newTaskDescription={newTaskDescription}
+        setNewTaskDescription={setNewTaskDescription}
+      />
+      <AddViewsModal
+        newViewsModalOpen={newViewsModalOpen}
+        toggleNewViewsModal={toggleNewViewsModal}
+      />
+
+      <div className="flex flex-wrap -mx-2">
+            {tasks.map((task) => (
+            <div key={task._id} className="w-full md:w-1/2 lg:w-1/3 p-2">
+                <TaskCard task={task}
+                    handleTaskNameEdit={handleTaskNameEdit}
+                    handleTaskDescriptionEdit = {handleTaskDescriptionEdit}
+                    handleTaskDeadlineEdit = {handleTaskDeadlineEdit}
+                    handleDeleteCard = {handleDeleteCard}
+                    handleAddCard= {handleAddCard}
+                    handleDeleteTask= {handleDeleteTask}
+                    showOptions = {showOptions}
+                    setTasks = {setTasks}
+                />
+            </div>
+            ))}
         </div>
-    );
+    </div>
+  );
 };
 
 export default Workspace;

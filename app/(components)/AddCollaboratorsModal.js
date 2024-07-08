@@ -1,32 +1,45 @@
+'use client'
 import React, { useState, useEffect, useRef } from 'react';
-
+import axios from 'axios'; 
 const AddCollaboratorsModal = ({ newCollaboratorsModalOpen, toggleNewCollaboratorsModal }) => {
     const [collaboratorSearch, setCollaboratorSearch] = useState('');
     const [collaborators, setCollaborators] = useState([]);
+    const [allUsers, setAllUsers] = useState([]); // Store all users fetched from the API
     const [searchResults, setSearchResults] = useState([]);
     const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
     const modalRef = useRef(null);
 
     useEffect(() => {
+        fetchCollaborators();
+    }, []);
+
+    const fetchCollaborators = async () => {
+        try {
+            const response = await axios.get('/api/collaborators');
+            setAllUsers(response.data.collaborators); // Set all users fetched from the API
+        } catch (error) {
+            console.error('Error fetching collaborators:', error);
+            setAllUsers([]); // Handle error state if needed
+        }
+    };
+
+    useEffect(() => {
         if (collaboratorSearch.trim() !== '') {
-            // Simulated search results
-            const results = [
-                { id: 1, name: 'John Doe' },
-                { id: 2, name: 'Jane Smith' },
-                { id: 3, name: 'Michael Johnson' },
-                { id: 4, name: 'Emma Brown' },
-            ].filter(user =>
-                user.name.toLowerCase().includes(collaboratorSearch.toLowerCase())
+            const filteredResults = allUsers.filter(user =>
+                user.toLowerCase().includes(collaboratorSearch.toLowerCase())
             );
-            setSearchResults(results);
+            setSearchResults(filteredResults);
         } else {
             setSearchResults([]);
         }
-    }, [collaboratorSearch]);
+    }, [collaboratorSearch, allUsers]);
 
-    const handleAddCollaborator = (user) => {
-        if (!collaborators.some(collab => collab === user.name)) {
-            setCollaborators([...collaborators, user.name]);
+    const handleAddCollaborator =async (user) => {
+        if (!collaborators.some(collab => collab === user)) {
+            setCollaborators([...collaborators, user]);
+            const currentUrl = window.location.href; 
+            const response = await axios.post('/api/add-collaborator', {user,url:currentUrl});
+
             setShowDuplicateWarning(false);
         } else {
             setShowDuplicateWarning(true);
@@ -84,8 +97,8 @@ const AddCollaboratorsModal = ({ newCollaboratorsModalOpen, toggleNewCollaborato
                     />
                     <div className="mt-2">
                         {searchResults.map(user => (
-                            <div key={user.id} className="flex items-center justify-between p-2 bg-gray-100 mb-2 rounded-md">
-                                <span>{user.name}</span>
+                            <div key={user} className="flex items-center justify-between p-2 bg-gray-100 mb-2 rounded-md">
+                                <span>{user}</span>
                                 <button
                                     onClick={() => handleAddCollaborator(user)}
                                     className="bg-blue-500 text-white py-1 px-2 rounded-md hover:bg-blue-600 focus:outline-none"

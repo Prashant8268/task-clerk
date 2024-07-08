@@ -62,5 +62,5 @@ const NewTaskModal = ({
         </div>
     ) : null;
 };
-
+NewTaskModal.displayName = 'New Task Modal';
 export default NewTaskModal;

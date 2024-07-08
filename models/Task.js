@@ -1,6 +1,6 @@
 // models/Task.js
 import mongoose from 'mongoose';
-
+import Card from './Card';
 const { Schema } = mongoose;
 
 const taskSchema = new Schema({

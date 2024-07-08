@@ -10,10 +10,8 @@ const TaskCard = ({
     handleDeleteTask,
     showOptions,
     setTasks,
-    tasks
 }) => {
     const cardRef = useRef(null);
-
     useEffect(() => {
         // Adjust height of the card dynamically based on its content
         if (cardRef.current) {
@@ -28,7 +26,7 @@ const TaskCard = ({
                     <input
                         type="text"
                         value={task.name}
-                        onChange={(e) => handleTaskNameEdit(task.id, e.target.value)}
+                        onChange={(e) => handleTaskNameEdit(task._id, e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                     />
                 </h2>
@@ -40,7 +38,7 @@ const TaskCard = ({
                     <input
                         type="date"
                         value={task.deadline}
-                        onChange={(e) => handleTaskDeadlineEdit(task.id, e.target.value)}
+                        onChange={(e) => handleTaskDeadlineEdit(task._id, e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                     />
                 </p>
@@ -51,7 +49,7 @@ const TaskCard = ({
                 </p>
                 <textarea
                     value={task.description}
-                    onChange={(e) => handleTaskDescriptionEdit(task.id, e.target.value)}
+                    onChange={(e) => handleTaskDescriptionEdit(task._id, e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                     style={{ minHeight: '50px', resize: 'vertical' }}
                     placeholder="Enter task description..."
@@ -68,7 +66,7 @@ const TaskCard = ({
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
-                                onClick={() => handleDeleteCard(task.id, index)}
+                                onClick={() => handleDeleteCard(task._id, index)}
                             >
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -83,7 +81,7 @@ const TaskCard = ({
                     onChange={(e) => {
                         const updatedTask = { ...task, newCardText: e.target.value };
                         const updatedTasks = [...tasks];
-                        updatedTasks[tasks.findIndex(t => t.id === task.id)] = updatedTask;
+                        updatedTasks[tasks.findIndex(t => t.id === task._id)] = updatedTask;
                         setTasks(updatedTasks);
                     }}
                     placeholder="Add a card..."
@@ -91,7 +89,7 @@ const TaskCard = ({
                 />
                 {task.newCardTextError && <p className="text-red-500 mt-1">{task.newCardTextError}</p>}
                 <button
-                    onClick={() => handleAddCard(task.id)}
+                    onClick={() => handleAddCard(task._id)}
                     className="mt-2 py-1 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none"
                 >
                     Add Card
@@ -104,7 +102,7 @@ const TaskCard = ({
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    onClick={() => showOptions(task.id)}
+                    onClick={() => showOptions(task._id)}
                 >
                     <path
                         strokeLinecap="round"
@@ -114,7 +112,7 @@ const TaskCard = ({
                     />
                 </svg>
                 <button
-                    onClick={() => handleDeleteTask(task.id)}
+                    onClick={() => handleDeleteTask(task._id)}
                     className="ml-2 text-red-500 hover:text-red-700 focus:outline-none"
                 >
                     Delete Task

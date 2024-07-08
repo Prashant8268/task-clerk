@@ -61,7 +61,7 @@ export default function Dashboard1() {
                         </tr>
                     </thead>
                     <tbody>
-                        {workspaces.map((workspace) => (
+                        {workspaces.length>0 && workspaces.map((workspace) => (
                             <tr key={workspace._id} className="hover:bg-gray-50 cursor-pointer">
                                 <td className="py-2 px-4 border-b text-left">
                                     <Link href={`/dashboard/${workspace._id}`}>

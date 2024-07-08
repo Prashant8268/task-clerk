@@ -20,9 +20,15 @@ export  async function GET(req, res) {
         const user = await clerkClient().users.getUser(userId);
         const userId1 = user.id;
 
-        const workspace = await Workspace.findOne({_id: id});
+        const workspace = await Workspace.findOne({ _id: id }).populate({
+            path: 'tasks',
+            populate: {
+              path: 'cards',
+              model: 'Card' 
+            }
+          });
+          
         if(workspace){
-            await workspace.populate('tasks');
             return NextResponse.json({success:true, tasks:workspace.tasks, workspaceName:workspace.name});
         } 
 

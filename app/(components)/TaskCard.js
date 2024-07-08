@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect,useState } from 'react';
 
 const TaskCard = ({
     task,
@@ -9,9 +9,9 @@ const TaskCard = ({
     handleAddCard,
     handleDeleteTask,
     showOptions,
-    setTasks,
 }) => {
     const cardRef = useRef(null);
+    const [newCardText ,setNewCardText] = useState('');
     useEffect(() => {
         // Adjust height of the card dynamically based on its content
         if (cardRef.current) {
@@ -66,7 +66,7 @@ const TaskCard = ({
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
-                                onClick={() => handleDeleteCard(task._id, index)}
+                                onClick={() => handleDeleteCard(task._id,card._id)}
                             >
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -77,16 +77,19 @@ const TaskCard = ({
             <div className="mt-4">
                 <input
                     type="text"
-                    value={task.newCardText}
+                    value={newCardText}
                     onChange={(e) => {
-                        
+                        setNewCardText(e.target.value);
                     }}
                     placeholder="Add a card..."
                     className="w-full py-1 px-2 border border-gray-300 rounded-md focus:outline-none"
                 />
                 {task.newCardTextError && <p className="text-red-500 mt-1">{task.newCardTextError}</p>}
                 <button
-                    onClick={() => handleAddCard(task._id)}
+                    onClick={() => {
+                        handleAddCard(task._id,newCardText);
+                        setNewCardText('');
+                    }}
                     className="mt-2 py-1 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none"
                 >
                     Add Card

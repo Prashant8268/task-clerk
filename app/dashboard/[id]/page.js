@@ -21,8 +21,8 @@ const Workspace = ({ params }) => {
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskDeadline, setNewTaskDeadline] = useState('');
-  const [socket, setSocket] = useState(null)
-  const SOCKET_SERVER_URL = 'https://task-clerk-backend.onrender.com';
+  const [socket, setSocket] = useState(null);
+  const SOCKET_SERVER_URL = 'http://localhost:3001';
   useEffect(() => {
     const newSocket = io(SOCKET_SERVER_URL);
     setSocket(newSocket);
@@ -35,7 +35,6 @@ const Workspace = ({ params }) => {
   
   useEffect(() => {
     if (!socket) return;
-
     const handleTaskUpdated = (updatedTask) => {
       setTasks((prevTasks) => prevTasks.map(task => task._id === updatedTask._id ? updatedTask : task));
     };
@@ -47,7 +46,7 @@ const Workspace = ({ params }) => {
     const handleTaskAdded = (newTask) => {
       setTasks((prevTasks) => [...prevTasks, newTask]);
     };
-
+// not working 
     const handleCardAdded = ({ taskId, newCard }) => {
       setTasks((prevTasks) =>
         prevTasks.map(task => {
@@ -131,10 +130,9 @@ const Workspace = ({ params }) => {
     }
   };
 
-  const handleAddCard = (taskId) => {
+  const handleAddCard = (taskId,newCardText) => {
     try {
-      const newCard = { id: Date.now(), text: 'New Card' };
-      socket.emit('addCard', { taskId, newCard });
+      socket.emit('addCard', { taskId, newCardText});
     } catch (error) {
       console.error('Error adding card:', error);
     }
@@ -169,9 +167,9 @@ const Workspace = ({ params }) => {
     }
   };
 
-  const handleDeleteCard = (taskId, cardIndex) => {
+  const handleDeleteCard = (taskId, cardId) => {
     try {
-      socket.emit('deleteCard', { taskId, cardIndex });
+      socket.emit('deleteCard', { taskId, cardId });
     } catch (error) {
       console.error('Error deleting card:', error);
     }
@@ -185,7 +183,6 @@ const Workspace = ({ params }) => {
   const handleDeleteWorkspace = async () => {
     try {
       console.log('Workspace deleted successfully');
-      // Optionally redirect or update UI after deletion
     } catch (error) {
       console.error('Error deleting workspace:', error);
     }

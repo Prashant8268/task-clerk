@@ -22,7 +22,7 @@ const Workspace = ({ params }) => {
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskDeadline, setNewTaskDeadline] = useState('');
   const [socket, setSocket] = useState(null)
-  const SOCKET_SERVER_URL = 'http://localhost:3001';
+  const SOCKET_SERVER_URL = 'https://task-clerk-backend.onrender.com';
   useEffect(() => {
     const newSocket = io(SOCKET_SERVER_URL);
     setSocket(newSocket);

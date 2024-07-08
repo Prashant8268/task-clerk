@@ -2,7 +2,6 @@
 import { useState ,useEffect} from 'react';
 import Link from 'next/link';
 import CreateWorkspaceModal from '../(components)/CreateWorkspace';
-import { FaEllipsisV } from 'react-icons/fa';
 import axios from 'axios';
 import LoadingSpinner from '../(components)/Spinner';
 

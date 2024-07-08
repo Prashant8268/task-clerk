@@ -16,10 +16,10 @@ const AddCollaboratorsModal = ({ newCollaboratorsModalOpen, toggleNewCollaborato
     const fetchCollaborators = async () => {
         try {
             const response = await axios.get('/api/collaborators');
-            setAllUsers(response.data.collaborators); // Set all users fetched from the API
+            setAllUsers(response.data.collaborators); 
         } catch (error) {
             console.error('Error fetching collaborators:', error);
-            setAllUsers([]); // Handle error state if needed
+            setAllUsers([]); 
         }
     };
 
@@ -39,7 +39,6 @@ const AddCollaboratorsModal = ({ newCollaboratorsModalOpen, toggleNewCollaborato
             setCollaborators([...collaborators, user]);
             const currentUrl = window.location.href; 
             const response = await axios.post('/api/add-collaborator', {user,url:currentUrl});
-
             setShowDuplicateWarning(false);
         } else {
             setShowDuplicateWarning(true);

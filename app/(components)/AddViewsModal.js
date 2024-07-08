@@ -1,34 +1,48 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 
 const AddViewsModal = ({ newViewsModalOpen, toggleNewViewsModal }) => {
     const [viewSearch, setViewSearch] = useState('');
     const [views, setViews] = useState([]);
+    const [allViews, setAllViews] = useState([]); // Store all views fetched from the API
     const [searchResults, setSearchResults] = useState([]);
     const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
     const modalRef = useRef(null);
 
-    // Simulated fetch of views based on viewSearch (replace with actual API call)
+    useEffect(() => {
+        fetchViews();
+    }, []);
+
+    const fetchViews = async () => {
+        try {
+            const response = await axios.get('/api/collaborators');
+            setAllViews(response.data.collaborators); 
+        } catch (error) {
+            console.error('Error fetching views:', error);
+            setAllViews([]);
+        }
+    };
+
     useEffect(() => {
         if (viewSearch.trim() !== '') {
-            // Simulated search results
-            const results = [
-                { id: 1, name: 'Dashboard' },
-                { id: 2, name: 'Analytics' },
-                { id: 3, name: 'Tasks' },
-                { id: 4, name: 'Calendar' },
-            ].filter(view =>
-                view.name.toLowerCase().includes(viewSearch.toLowerCase())
+            const filteredResults = allViews.filter(view =>
+                view.toLowerCase().includes(viewSearch.toLowerCase())
             );
-            setSearchResults(results);
+            setSearchResults(filteredResults);
         } else {
             setSearchResults([]);
         }
-    }, [viewSearch]);
+    }, [viewSearch, allViews]);
 
-    const handleAddView = (view) => {
+    const handleAddView = async (view) => {
         if (!views.some(v => v === view.name)) {
             setViews([...views, view.name]);
-            setShowDuplicateWarning(false);
+            try {
+                const response = await axios.post('/api/add-view', { view });
+                setShowDuplicateWarning(false);
+            } catch (error) {
+                console.error('Error adding view:', error);
+            }
         } else {
             setShowDuplicateWarning(true);
         }
@@ -85,8 +99,8 @@ const AddViewsModal = ({ newViewsModalOpen, toggleNewViewsModal }) => {
                     />
                     <div className="mt-2">
                         {searchResults.map(view => (
-                            <div key={view.id} className="flex items-center justify-between p-2 bg-gray-100 mb-2 rounded-md">
-                                <span>{view.name}</span>
+                            <div key={view} className="flex items-center justify-between p-2 bg-gray-100 mb-2 rounded-md">
+                                <span>{view}</span>
                                 <button
                                     onClick={() => handleAddView(view)}
                                     className="bg-blue-500 text-white py-1 px-2 rounded-md hover:bg-blue-600 focus:outline-none"

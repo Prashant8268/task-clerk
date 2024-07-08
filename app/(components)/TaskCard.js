@@ -1,4 +1,10 @@
-import React, { useRef, useEffect,useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { FiTrash, FiPlusCircle, FiXCircle } from 'react-icons/fi';
+
+const getRandomColor = () => {
+    const colors = ['bg-red-100', 'bg-green-100', 'bg-blue-100', 'bg-yellow-100', 'bg-purple-100', 'bg-pink-100'];
+    return colors[Math.floor(Math.random() * colors.length)];
+};
 
 const TaskCard = ({
     task,
@@ -11,111 +17,105 @@ const TaskCard = ({
     showOptions,
 }) => {
     const cardRef = useRef(null);
-    const [newCardText ,setNewCardText] = useState('');
+    const [newCardText, setNewCardText] = useState('');
+    const [cardColors, setCardColors] = useState([]);
+
+    // Initialize card colors when task.cards changes
     useEffect(() => {
-        // Adjust height of the card dynamically based on its content
+        if (task.cards.length > 0 && cardColors.length !== task.cards.length) {
+            const colors = task.cards.map(() => getRandomColor());
+            setCardColors(colors);
+        }
+    }, [task.cards, cardColors]);
+
+    // Adjust card height dynamically when task description or number of cards change
+    useEffect(() => {
         if (cardRef.current) {
+            cardRef.current.style.height = 'auto'; // Reset height before recalculating
             cardRef.current.style.height = `${cardRef.current.scrollHeight}px`;
         }
-    }, [task.description, task.cards]);
+    }, [task.description, task.cards.length]);
+
+    const handleAddNewCard = (taskId, cardText) => {
+        if (cardText.trim() !== '') {
+            handleAddCard(taskId, cardText);
+            setCardColors([...cardColors, getRandomColor()]);
+            setNewCardText('');
+        }
+    };
 
     return (
-        <div ref={cardRef} className="bg-white p-4 rounded-lg shadow-md overflow-hidden">
-            <div className="mb-2">
-                <h2 className="text-lg font-semibold">
+        <div ref={cardRef} className="bg-white p-3 rounded-lg shadow-md overflow-hidden transition-transform transform hover:scale-105">
+            <div className="mb-3">
+                <h2 className="text-md font-semibold">
                     <input
                         type="text"
                         value={task.name}
                         onChange={(e) => handleTaskNameEdit(task._id, e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                     />
                 </h2>
                 {task.name.trim() === '' && <p className="text-red-500 mt-1">Task name cannot be empty.</p>}
             </div>
-            <div className="mb-2">
-                <p className="text-gray-600">
+            <div className="mb-3">
+                <p className="text-gray-600 text-sm">
                     Deadline:{" "}
                     <input
                         type="date"
                         value={task.deadline.split('T')[0]}
                         onChange={(e) => handleTaskDeadlineEdit(task._id, e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                     />
                 </p>
             </div>
-            <div className="mb-2">
-                <p className="text-gray-600">
+            <div className="mb-3">
+                <p className="text-gray-600 text-sm">
                     Description:
                 </p>
                 <textarea
                     value={task.description}
                     onChange={(e) => handleTaskDescriptionEdit(task._id, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
-                    style={{ minHeight: '50px', resize: 'vertical' }}
+                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                    style={{ minHeight: '40px', resize: 'vertical' }}
                     placeholder="Enter task description..."
                 />
             </div>
-            <div className="overflow-y-auto max-h-48 mt-4">
+            <div className="overflow-y-auto max-h-36 mt-3">
                 <ul>
                     {task.cards.map((card, index) => (
-                        <li key={index} className="flex items-center justify-between mb-2">
+                        <li key={index} className={`flex items-center justify-between mb-2 px-2 py-1 rounded-md ${cardColors[index]}`}>
                             <span>{card.text}</span>
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-6 w-6 text-gray-500 cursor-pointer"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                onClick={() => handleDeleteCard(task._id,card._id)}
-                            >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <FiXCircle
+                                className="text-gray-500 cursor-pointer hover:text-red-500"
+                                onClick={() => handleDeleteCard(task._id, card._id)}
+                                size={16}
+                            />
                         </li>
                     ))}
                 </ul>
             </div>
-            <div className="mt-4">
+            <div className="mt-3">
                 <input
                     type="text"
                     value={newCardText}
-                    onChange={(e) => {
-                        setNewCardText(e.target.value);
-                    }}
+                    onChange={(e) => setNewCardText(e.target.value)}
                     placeholder="Add a card..."
-                    className="w-full py-1 px-2 border border-gray-300 rounded-md focus:outline-none"
+                    className="w-full py-1 px-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                 />
-                {task.newCardTextError && <p className="text-red-500 mt-1">{task.newCardTextError}</p>}
+                {task.newCardTextError && <p className="text-red-500 mt-1 text-sm">{task.newCardTextError}</p>}
                 <button
-                    onClick={() => {
-                        handleAddCard(task._id,newCardText);
-                        setNewCardText('');
-                    }}
-                    className="mt-2 py-1 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none"
+                    onClick={() => handleAddNewCard(task._id, newCardText)}
+                    className="mt-2 py-1 px-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none flex items-center justify-center text-sm"
                 >
-                    Add Card
+                    <FiPlusCircle size={16} className="mr-1" /> Add Card
                 </button>
             </div>
-            <div className="mt-4 text-gray-500 cursor-pointer">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6 inline-block align-middle"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    onClick={() => showOptions(task._id)}
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                </svg>
+            <div className="mt-3 flex items-center justify-between text-gray-500 cursor-pointer">
                 <button
                     onClick={() => handleDeleteTask(task._id)}
-                    className="ml-2 text-red-500 hover:text-red-700 focus:outline-none"
+                    className="text-red-500 hover:text-red-700 focus:outline-none flex items-center text-sm"
                 >
-                    Delete Task
+                    <FiTrash size={16} className="mr-1" /> Delete Task
                 </button>
             </div>
         </div>

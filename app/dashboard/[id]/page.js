@@ -7,8 +7,10 @@ import AddCollaboratorsModal from '@/app/(components)/AddCollaboratorsModal';
 import NewTaskModal from '@/app/(components)/NewTaskModal';
 import AddViewsModal from '@/app/(components)/AddViewsModal';
 import TaskCard from '@/app/(components)/TaskCard';
+import { useRouter } from 'next/navigation';
 
 const Workspace = ({ params }) => {
+  const router = useRouter();
   const { id } = params;
   const [tasks, setTasks] = useState([]);
   const [workspaceName, setWorkspaceName] = useState('');
@@ -75,6 +77,10 @@ const Workspace = ({ params }) => {
         setTasks((prevTasks)=> prevTasks.map(task => task._id ===updatedTask._id? updatedTask: task ));
     })
     socket.on('taskAdded', handleTaskAdded);
+    socket.on('workspaceDeleted',()=>{
+      router.push('/dashboard');
+      
+    })
     socket.on('cardAdded', handleCardAdded);
     socket.on('cardDeleted', handleCardDeleted);
 
@@ -182,14 +188,18 @@ const Workspace = ({ params }) => {
 
   const handleDeleteWorkspace = async () => {
     try {
-      console.log('Workspace deleted successfully');
+      setLoading(true);
+      const response = await axios.post(`/api/delete-workspace`, { id: id });
+      setShowDeleteWorkspaceModal(false);
+      socket.emit("deleteWorkspace", { workspaceId: id });
+    
     } catch (error) {
-      console.error('Error deleting workspace:', error);
+        console.error('Error deleting workspace:', error);
     }
-  };
+};
 
   return (
-    <div className="p-2 h-screen overflow-scroll">
+    <div className="p-2 h-screen md:h-[87vh] overflow-scroll">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">
         <span className="block text-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text">
           {workspaceName}
@@ -244,7 +254,6 @@ const Workspace = ({ params }) => {
           </div>
         )}
       </div>
-
       <AddCollaboratorsModal
         collaborators={[]}
         newCollaboratorsModalOpen={newCollaboratorsModalOpen}
@@ -266,7 +275,7 @@ const Workspace = ({ params }) => {
         toggleNewViewsModal={toggleNewViewsModal}
       />
 
-      <div className="flex flex-wrap -mx-2">
+      <div className="flex flex-wrap flex-shrink -mx-2">
             {tasks.map((task) => (
             <div key={task._id} className="w-full md:w-1/2 lg:w-1/3 p-2">
                 <TaskCard task={task}

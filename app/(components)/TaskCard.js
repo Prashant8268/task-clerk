@@ -37,7 +37,7 @@ const TaskCard = ({
                     Deadline:{" "}
                     <input
                         type="date"
-                        value={task.deadline}
+                        value={task.deadline.split('T')[0]}
                         onChange={(e) => handleTaskDeadlineEdit(task._id, e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                     />
@@ -79,10 +79,7 @@ const TaskCard = ({
                     type="text"
                     value={task.newCardText}
                     onChange={(e) => {
-                        const updatedTask = { ...task, newCardText: e.target.value };
-                        const updatedTasks = [...tasks];
-                        updatedTasks[tasks.findIndex(t => t.id === task._id)] = updatedTask;
-                        setTasks(updatedTasks);
+                        
                     }}
                     placeholder="Add a card..."
                     className="w-full py-1 px-2 border border-gray-300 rounded-md focus:outline-none"

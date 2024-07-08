@@ -30,7 +30,10 @@ const NewTaskModal = ({
                     <input
                         type="date"
                         value={newTaskDeadline}
-                        onChange={(e) => setNewTaskDeadline(e.target.value)}
+                        onChange={(e) => {
+                            const date = e.target.value.split('T')[0];
+                            setNewTaskDeadline(date);
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                     />
                 </div>

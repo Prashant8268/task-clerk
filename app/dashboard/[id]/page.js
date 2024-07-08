@@ -21,24 +21,34 @@ const Workspace = ({ params }) => {
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskDeadline, setNewTaskDeadline] = useState('');
-  const SOCKET_SERVER_URL = 'https://task-clerk-backend.onrender.com';
-  const socket = io(SOCKET_SERVER_URL);
-  // Connect to the Socket.io server
+  const [socket, setSocket] = useState(null)
+  const SOCKET_SERVER_URL = 'http://localhost:3001';
   useEffect(() => {
-    socket.on('taskUpdated', (updatedTask) => {
-      setTasks((prevTasks) => prevTasks.map(task => task._id === updatedTask._id ? updatedTask : task));
-    });
-    socket.on('taskDescriptionUpdated', (updatedTask)=>{
-        setTasks((prevTasks)=> prevTasks.map(task => task._id ===updatedTask._id? updatedTask: task ));
-    })
-    socket.on('taskDeleted', (deletedTaskId) => {
-      setTasks((prevTasks) => prevTasks.filter(task => task._id !== deletedTaskId));
-    });
+    const newSocket = io(SOCKET_SERVER_URL);
+    setSocket(newSocket);
 
-    socket.on('taskAdded', (newTask) => {
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
+  
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleTaskUpdated = (updatedTask) => {
+      setTasks((prevTasks) => prevTasks.map(task => task._id === updatedTask._id ? updatedTask : task));
+    };
+
+    const handleTaskDeleted = (deletedTaskId) => {
+      setTasks((prevTasks) => prevTasks.filter(task => task._id !== deletedTaskId));
+    };
+
+    const handleTaskAdded = (newTask) => {
       setTasks((prevTasks) => [...prevTasks, newTask]);
-    });
-    socket.on('cardAdded', ({ taskId, newCard }) => {
+    };
+
+    const handleCardAdded = ({ taskId, newCard }) => {
       setTasks((prevTasks) =>
         prevTasks.map(task => {
           if (task._id === taskId) {
@@ -47,9 +57,9 @@ const Workspace = ({ params }) => {
           return task;
         })
       );
-    });
+    };
 
-    socket.on('cardDeleted', ({ taskId, cardIndex }) => {
+    const handleCardDeleted = ({ taskId, cardIndex }) => {
       setTasks((prevTasks) =>
         prevTasks.map(task => {
           if (task._id === taskId) {
@@ -58,18 +68,31 @@ const Workspace = ({ params }) => {
           return task;
         })
       );
-    });
+    };
+
+    socket.on('taskUpdated', handleTaskUpdated);
+    socket.on('taskDeleted', handleTaskDeleted);
+    socket.on('taskDescriptionUpdated',(updatedTask)=>{
+        setTasks((prevTasks)=> prevTasks.map(task => task._id ===updatedTask._id? updatedTask: task ));
+    })
+    socket.on('taskAdded', handleTaskAdded);
+    socket.on('cardAdded', handleCardAdded);
+    socket.on('cardDeleted', handleCardDeleted);
 
     return () => {
-      socket.disconnect();
+      socket.off('taskUpdated', handleTaskUpdated);
+      socket.off('taskDeleted', handleTaskDeleted);
+      socket.off('taskAdded', handleTaskAdded);
+      socket.off('cardAdded', handleCardAdded);
+      socket.off('cardDeleted', handleCardDeleted);
     };
   }, [socket]);
 
+  // Fetch tasks on initial load
   const fetchTasks = useCallback(async () => {
     setLoading(true);
     try {
       const response = await axios.get(`/api/tasks/${id}`);
-      console.log('rtasks',response.data.tasks);
       setTasks(response.data.tasks);
       setWorkspaceName(response.data.workspaceName);
     } catch (error) {
@@ -83,35 +106,32 @@ const Workspace = ({ params }) => {
     fetchTasks();
   }, [fetchTasks]);
 
-// working 
-  const handleTaskNameEdit = async (taskId, newName) => {
+  // Handlers for socket operations
+  const handleTaskNameEdit = async(taskId, newName) => {
     try {
       socket.emit('editTask', { id: taskId, name: newName });
-
     } catch (error) {
       console.error('Error updating task name:', error);
     }
   };
-
-
-  const handleTaskDescriptionEdit = async(taskId, newDescription ) =>{
-    try{
-        socket.emit('editTaskDescription',{id: taskId , description: newDescription});
-    } catch(err){
-        console.log('Error in updating description');
-    }
-
-  }
-
-  const handleTaskDeadlineEdit = async (taskId, newDeadline) => {
+// working 
+  const handleTaskDescriptionEdit = async(taskId, newDescription) => {
     try {
-      socket.emit('updateTask', { id: taskId, deadline: newDeadline });
+      socket.emit('editTaskDescription', { id: taskId, description: newDescription });
+    } catch (err) {
+      console.error('Error in updating description:', err);
+    }
+  };
+
+  const handleTaskDeadlineEdit = (taskId, newDeadline) => {
+    try {
+      socket.emit('editTaskDeadline', { id: taskId, deadline: newDeadline });
     } catch (error) {
       console.error('Error updating task deadline:', error);
     }
   };
 
-  const handleAddCard = async (taskId) => {
+  const handleAddCard = (taskId) => {
     try {
       const newCard = { id: Date.now(), text: 'New Card' };
       socket.emit('addCard', { taskId, newCard });
@@ -120,15 +140,14 @@ const Workspace = ({ params }) => {
     }
   };
 
-//   working 
-  const handleDeleteTask = async (taskId) => {
+  const handleDeleteTask = (taskId) => {
     try {
       socket.emit('deleteTask', { id: taskId });
     } catch (error) {
       console.error('Error deleting task:', error);
     }
   };
-// working 
+
   const handleAddNewTask = () => {
     const newTask = {
       name: newTaskName,
@@ -139,16 +158,18 @@ const Workspace = ({ params }) => {
       cards: [],
       workspaceId: id,
     };
-    socket.emit('addTask', newTask,);
-    setNewTaskDescription('');
-    setNewTaskName('');
-    setNewTaskDeadline('');
-    setNewTaskModalOpen(false);
+    try {
+      socket.emit('addTask', newTask);
+      setNewTaskDescription('');
+      setNewTaskName('');
+      setNewTaskDeadline('');
+      setNewTaskModalOpen(false);
+    } catch (error) {
+      console.error('Error adding new task:', error);
+    }
   };
 
-
-
-  const handleDeleteCard = async (taskId, cardIndex) => {
+  const handleDeleteCard = (taskId, cardIndex) => {
     try {
       socket.emit('deleteCard', { taskId, cardIndex });
     } catch (error) {
@@ -161,7 +182,6 @@ const Workspace = ({ params }) => {
   const toggleNewViewsModal = () => setNewViewsModalOpen(!newViewsModalOpen);
   const toggleDeleteWorkspaceModal = () => setShowDeleteWorkspaceModal(!showDeleteWorkspaceModal);
 
-//   
   const handleDeleteWorkspace = async () => {
     try {
       console.log('Workspace deleted successfully');

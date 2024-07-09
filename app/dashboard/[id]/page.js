@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import AddViewerModal from '@/app/(components)/AddViewerModal';
 import PopupNotification from '@/app/(components)/PopupNotification';
 
+
 const Workspace = ({ params }) => {
   const router = useRouter();
   const { id } = params;
@@ -63,7 +64,7 @@ const Workspace = ({ params }) => {
     const handleTaskAdded = (newTask) => {
       setTasks((prevTasks) => [...prevTasks, newTask]);
     };
-// not working 
+
     const handleCardAdded = ({ taskId, newCard }) => {
       setTasks((prevTasks) =>
         prevTasks.map(task => {

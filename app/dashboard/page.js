@@ -49,8 +49,8 @@ export default function Dashboard1() {
     const memoizedWorkspaces = useMemo(() => {
         return workspaces.map(workspace => ({
             ...workspace,
-            adminName: workspace.admin.name, // Memoize admin name to avoid repeated computations
-            formattedDate: new Date(workspace.createdAt).toLocaleDateString(), // Format date once
+            adminName: workspace.admin.name, 
+            formattedDate: new Date(workspace.createdAt).toLocaleDateString(), 
         }));
     }, [workspaces]);
 

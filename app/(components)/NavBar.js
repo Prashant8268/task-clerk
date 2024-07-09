@@ -2,19 +2,17 @@
 import { SignedIn, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
-import { MenuIcon } from '@heroicons/react/outline';
-import MenuSimple from './dropdown';
 import { useUser } from '@clerk/nextjs';
 
-const Navbar = () => {
-  const user = useUser(); // Using useUser hook from Clerk to get user information
-  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false); // State to manage mobile menu open/close
-  const mobileMenuRef = useRef(null); // Ref to the mobile menu container
-  const menuButtonRef = useRef(null); // Ref to the menu button
 
-  // Function to toggle mobile menu
+const Navbar = () => {
+  const user = useUser(); 
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false); 
+  const mobileMenuRef = useRef(null); 
+  const menuButtonRef = useRef(null); 
+
   const toggleMobileMenu = () => {
-    setMobileMenuOpen(prevState => !prevState); // Toggle the state
+    setMobileMenuOpen(prevState => !prevState); 
   };
 
   // Function to close mobile menu
@@ -27,7 +25,7 @@ const Navbar = () => {
     const handleClickOutside = (event) => {
       if (!menuButtonRef.current.contains(event.target) &&
           mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
-        closeMobileMenu(); // Close menu if clicking outside menu button and menu itself
+        closeMobileMenu(); 
       }
     };
 
@@ -46,7 +44,7 @@ const Navbar = () => {
   return (
     <nav className="bg-gray-900 p-4 shadow-md relative z-10">
       <div className="container mx-auto flex justify-between items-center">
-        {/* Logo */}
+        {/* Logo */}  
         <Link href="/" className="text-white font-bold text-2xl">
           <span className="bg-purple-800 p-2 rounded">Task</span> Clerk
         </Link>

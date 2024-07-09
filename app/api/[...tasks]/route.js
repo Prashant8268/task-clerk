@@ -13,7 +13,7 @@ export  async function GET(req, res) {
     try {
         const { userId } = getAuth(req);
         if (!userId) {
-            return res.status(401).json({ error: "Unauthorized" });
+            return NextResponse.json({success:false, message:'Unauthorized'});
           }
         const url = req.url;
         const id = url.split('/tasks/')[1];

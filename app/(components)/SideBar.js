@@ -3,12 +3,12 @@ import Link from 'next/link';
 import { MenuIcon } from '@heroicons/react/outline';
 
 export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
-  const sidebarRef = useRef(null); // Ref to the sidebar container
+  const sidebarRef = useRef(null); 
 
   // Function to handle clicks outside sidebar
   const handleClickOutside = (event) => {
     if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-      toggleSidebar(); // Toggle sidebar if clicking outside
+      toggleSidebar(); 
     }
   };
 

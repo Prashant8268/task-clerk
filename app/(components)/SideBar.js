@@ -43,20 +43,22 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
                     transition-transform duration-300 ease-in-out z-40`}
       >
         {/* TaskClerk Logo and Branding */}
-        <div className="mb-8">
+        <div className="mb-8 flex items-center justify-center">
           <Link href="/" className="flex items-center space-x-2 text-white text-xl font-bold">
             <span className="bg-purple-600 px-3 py-1 rounded">Task</span>
-            <span className=" px-3 py-1 rounded">Clerk</span>
+            <span className="px-3 py-1 rounded">Clerk</span>
           </Link>
         </div>
 
         {/* Sidebar Menu Items */}
-        <div className="space-y-10">
-          <ul className="bg-white shadow-md rounded-lg p-4 space-y-5 text-gray-800">
-            <li className="py-2 px-4 border-b border-gray-200">Item 1</li>
-            <li className="py-2 px-4 border-b border-gray-200">Item 2</li>
-            <li className="py-2 px-4 border-b border-gray-200">Item 3</li>
-            <li className="py-2 px-4 border-b border-gray-200">Item 4</li>
+        <div className="space-y-4">
+          <ul className="bg-white shadow-md rounded-lg p-4 space-y-2 text-gray-800">
+            <li className="py-2 px-4 border-b border-gray-200">
+              <Link className="flex items-center space-x-2" href="/dashboard">
+                <span className="text-lg">Workspaces</span>
+              </Link>
+            </li>
+            {/* Add more menu items as needed */}
           </ul>
         </div>
       </aside>

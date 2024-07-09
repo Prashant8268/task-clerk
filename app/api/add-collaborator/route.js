@@ -19,12 +19,16 @@ export  async function POST(req, res) {
         const id = body.url.split('/dashboard/')[1];
         const workspace = await Workspace.findOne({_id: id});
         const user = await User.findOne({email:body.user});
+        const isViewer = workspace.viewers.includes(user._id);
+        if (isViewer) {
+            return NextResponse.json({ success: true, message: "User already exists as viewer" ,exist:true});
+        }
         if(workspace && user ){
             workspace.collaborators.push(user._id);
             user.workspaces.push(workspace._id);
             await user.save();
             await workspace.save();
-            return NextResponse.json({success: true});
+            return NextResponse.json({success: true, message:'Collaborated Added'});
 
         } 
         return NextResponse.json({ message: 'user not present',  }, { status: 401 });

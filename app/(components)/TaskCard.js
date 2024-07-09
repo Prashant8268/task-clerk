@@ -62,7 +62,7 @@ const TaskCard = ({
                     Deadline:{" "}
                     <input
                         type="date"
-                        value={task.deadline.split('T')[0]}
+                        value={task.deadline ? task.deadline.split('T')[0] : ''}
                         onChange={(e) => handleTaskDeadlineEdit(task._id, e.target.value)}
                         className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                     />

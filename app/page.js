@@ -1,9 +1,9 @@
 import Link from 'next/link';
-
 const LandingPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
       {/* Hero Section */}
+
       <section className="flex flex-col items-center justify-center text-center text-white py-20 px-4 sm:px-6 lg:px-8">
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 animate-bounce">Welcome to TaskClerk</h1>
         <p className="text-lg sm:text-xl lg:text-2xl mb-6">

@@ -5,16 +5,17 @@ import io from 'socket.io-client';
 import LoadingSpinner from '@/app/(components)/Spinner';
 import AddCollaboratorsModal from '@/app/(components)/AddCollaboratorsModal';
 import NewTaskModal from '@/app/(components)/NewTaskModal';
-import AddViewsModal from '@/app/(components)/AddViewsModal';
 import TaskCard from '@/app/(components)/TaskCard';
 import { useRouter } from 'next/navigation';
+import AddViewerModal from '@/app/(components)/AddViewerModal';
+import PopupNotification from '@/app/(components)/PopupNotification';
 
 const Workspace = ({ params }) => {
   const router = useRouter();
   const { id } = params;
+  const [allUsers, setAllUsers] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [workspaceName, setWorkspaceName] = useState('');
-  const [showOptions, setShowOptions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [newTaskModalOpen, setNewTaskModalOpen] = useState(false);
   const [newCollaboratorsModalOpen, setNewCollaboratorsModalOpen] = useState(false);
@@ -24,15 +25,29 @@ const Workspace = ({ params }) => {
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskDeadline, setNewTaskDeadline] = useState('');
   const [socket, setSocket] = useState(null);
-  const SOCKET_SERVER_URL = 'http://localhost:3001';
+  const SOCKET_SERVER_URL = 'https://task-clerk-backend.onrender.com';
   useEffect(() => {
     const newSocket = io(SOCKET_SERVER_URL);
     setSocket(newSocket);
+    fetchUsers();
 
     return () => {
       newSocket.disconnect();
     };
   }, []);
+
+  const fetchUsers = useCallback(async () => {
+    try {
+        setLoading(true);
+        const usersResponse = await axios.get('/api/get-users');
+        setAllUsers(usersResponse.data.allUsers);
+        setLoading(false);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        setAllUsers([]);
+    }
+}, []); 
+
 
   
   useEffect(() => {
@@ -95,16 +110,15 @@ const Workspace = ({ params }) => {
 
   // Fetch tasks on initial load
   const fetchTasks = useCallback(async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const response = await axios.get(`/api/tasks/${id}`);
       setTasks(response.data.tasks);
       setWorkspaceName(response.data.workspaceName);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching tasks:', error);
-    } finally {
-      setLoading(false);
-    }
+    } 
   }, [id]);
 
   useEffect(() => {
@@ -153,6 +167,7 @@ const Workspace = ({ params }) => {
   };
 
   const handleAddNewTask = () => {
+    
     const newTask = {
       name: newTaskName,
       description: newTaskDescription,
@@ -224,7 +239,7 @@ const Workspace = ({ params }) => {
           onClick={toggleNewViewsModal}
           className="w-full md:w-auto bg-purple-500 text-white py-2 px-4 rounded-md hover:bg-purple-600 focus:outline-none mt-2 md:mt-0"
         >
-          New Views
+          Add Viewer
         </button>
         <button
           onClick={toggleDeleteWorkspaceModal}
@@ -256,6 +271,8 @@ const Workspace = ({ params }) => {
       </div>
       <AddCollaboratorsModal
         collaborators={[]}
+        allUsers={allUsers}
+        params = {params}
         newCollaboratorsModalOpen={newCollaboratorsModalOpen}
         toggleNewCollaboratorsModal={toggleNewCollaboratorsModal}
       />
@@ -270,9 +287,11 @@ const Workspace = ({ params }) => {
         newTaskDescription={newTaskDescription}
         setNewTaskDescription={setNewTaskDescription}
       />
-      <AddViewsModal
+      <AddViewerModal
         newViewsModalOpen={newViewsModalOpen}
         toggleNewViewsModal={toggleNewViewsModal}
+        allUsers={allUsers}
+        params={params}
       />
 
       <div className="flex flex-wrap flex-shrink -mx-2">
@@ -285,7 +304,6 @@ const Workspace = ({ params }) => {
                     handleDeleteCard = {handleDeleteCard}
                     handleAddCard= {handleAddCard}
                     handleDeleteTask= {handleDeleteTask}
-                    showOptions = {showOptions}
                     setTasks = {setTasks}
                 />
             </div>

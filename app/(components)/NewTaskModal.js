@@ -1,4 +1,5 @@
-// Inside NewTaskModal component
+import React, { useState } from 'react';
+
 const NewTaskModal = ({
     newTaskModalOpen,
     toggleNewTaskModal,
@@ -6,11 +7,22 @@ const NewTaskModal = ({
     setNewTaskName,
     newTaskDeadline,
     setNewTaskDeadline,
-    newTaskDescription, 
+    newTaskDescription,
     setNewTaskDescription,
     handleAddNewTask,
-    newTaskNameError,
+
 }) => {
+    const [showEmptyWarning, setShowEmptyWarning] = useState(false);
+
+    const handleAddTask = () => {
+        if (newTaskName.trim() === '') {
+            setShowEmptyWarning(true);
+        } else {
+            setShowEmptyWarning(false);
+            handleAddNewTask();
+        }
+    };
+
     return newTaskModalOpen ? (
         <div className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded-lg shadow-md max-w-md">
@@ -20,10 +32,14 @@ const NewTaskModal = ({
                     <input
                         type="text"
                         value={newTaskName}
-                        onChange={(e) => setNewTaskName(e.target.value)}
+                        onChange={(e) => {
+                            if(e.target.value === ''){
+                                setShowEmptyWarning(true);
+                            } else { setShowEmptyWarning(false)}
+                            setNewTaskName(e.target.value)}}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                     />
-                    {newTaskNameError && <p className="text-red-500 mt-1">{newTaskNameError}</p>}
+                    {showEmptyWarning && <p className="text-red-500 mt-1">Task name cannot be empty</p>}
                 </div>
                 <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Deadline</label>
@@ -49,7 +65,7 @@ const NewTaskModal = ({
                 </div>
                 <div className="flex justify-end">
                     <button
-                        onClick={handleAddNewTask}
+                        onClick={handleAddTask}
                         className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none"
                     >
                         Add Task
@@ -65,5 +81,5 @@ const NewTaskModal = ({
         </div>
     ) : null;
 };
-NewTaskModal.displayName = 'New Task Modal';
+NewTaskModal.displayName = 'New Task Form';
 export default NewTaskModal;

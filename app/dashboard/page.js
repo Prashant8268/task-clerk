@@ -1,17 +1,21 @@
 'use client'
-import { useState ,useEffect} from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import CreateWorkspaceModal from '../(components)/CreateWorkspace';
 import axios from 'axios';
 import LoadingSpinner from '../(components)/Spinner';
+import PopupNotification from '../(components)/PopupNotification';
 
 export default function Dashboard1() {
     const [workspaces, setWorkspaces] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setModalOpen] = useState(false);
+    const [showNotification, setShowNotification] = useState(false);
+    const [notificationMessage, setNotificationMessage] = useState('');
 
     const openModal = () => setModalOpen(true);
     const closeModal = () => setModalOpen(false);
+
     useEffect(() => {
         const fetchWorkspaces = async () => {
             try {
@@ -26,28 +30,34 @@ export default function Dashboard1() {
         fetchWorkspaces();
     }, []);
 
-    const handleCreateWorkspace = async (newWorkspace) => {
+    const handleCreateWorkspace = useCallback(async (newWorkspace) => {
         try {
             setIsLoading(true);
+            setShowNotification(false);
             const response = await axios.post('/api/create-workspace', {
-                workspace:JSON.stringify(newWorkspace.name)
+                workspace: JSON.stringify(newWorkspace.name)
             });
+            setNotificationMessage(response.data.message);
+            setShowNotification(true);
             setIsLoading(false);
-            setWorkspaces([...workspaces, response.data.workspace]);
+            setWorkspaces(prevWorkspaces => [...prevWorkspaces, response.data.workspace]);
         } catch (error) {
             console.error('Error creating workspace:', error);
         }
-    }
+    }, []);
 
-    const [selectedWorkspace, setSelectedWorkspace] = useState(null);
-
-    const handleToggleOptions = (index) => {
-        setSelectedWorkspace(selectedWorkspace === index ? null : index);
-    };
+    const memoizedWorkspaces = useMemo(() => {
+        return workspaces.map(workspace => ({
+            ...workspace,
+            adminName: workspace.admin.name, // Memoize admin name to avoid repeated computations
+            formattedDate: new Date(workspace.createdAt).toLocaleDateString(), // Format date once
+        }));
+    }, [workspaces]);
 
     return (
-        <div className="p-6 min-h-screen overflow-scroll">
-            {isLoading? <LoadingSpinner /> : null}
+        <div className="p-6 h-screen md:h-[87vh] overflow-scroll">
+            {showNotification && <PopupNotification message={notificationMessage} />}
+            {isLoading ? <LoadingSpinner /> : null}
             <h1 className="text-2xl font-bold mb-6">Your Workspaces</h1>
             <button onClick={openModal} className="mb-6 px-4 py-2 bg-blue-600 text-white rounded">Create Workspace</button>
             <div className="overflow-x-auto">
@@ -60,7 +70,7 @@ export default function Dashboard1() {
                         </tr>
                     </thead>
                     <tbody>
-                        {workspaces.length>0 && workspaces.map((workspace) => (
+                        {memoizedWorkspaces.length > 0 && memoizedWorkspaces.map(workspace => (
                             <tr key={workspace._id} className="hover:bg-gray-50 cursor-pointer">
                                 <td className="py-2 px-4 border-b text-left">
                                     <Link href={`/dashboard/${workspace._id}`}>
@@ -69,12 +79,12 @@ export default function Dashboard1() {
                                 </td>
                                 <td className="py-2 px-4 border-b text-left">
                                     <Link href={`/dashboard/${workspace._id}`}>
-                                        {workspace.admin.name}
+                                        {workspace.adminName}
                                     </Link>
                                 </td>
                                 <td className="py-2 px-4 border-b text-left">
                                     <Link href={`/dashboard/${workspace._id}`}>
-                                        {workspace.createdAt}
+                                        {workspace.formattedDate}
                                     </Link>
                                 </td>
                             </tr>

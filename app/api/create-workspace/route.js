@@ -40,7 +40,7 @@ export  async function POST(req, res) {
             await savedWorkspace.populate('admin', 'name');
             user.workspaces.push(savedWorkspace._id);
             await user.save();
-            return NextResponse.json({success: true, workspace:savedWorkspace});
+            return NextResponse.json({success: true, workspace:savedWorkspace, message:'Workspace Created'});
         } catch (error) {
             console.error(error);
             return NextResponse.json({message: 'Server Error',success:false})

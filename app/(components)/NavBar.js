@@ -50,60 +50,6 @@ const Navbar = () => {
         <Link href="/" className="text-white font-bold text-2xl">
           <span className="bg-purple-800 p-2 rounded">Task</span> Clerk
         </Link>
-
-        {/* Desktop Navigation Links */}
-        <div className="hidden md:flex space-x-4">
-          <div className="relative">
-            <MenuSimple 
-              menuName="Workspace" 
-              menuItems={['Project 1', 'Project 2', 'Project 3']} 
-            />
-          </div>
-          <div className="relative">
-            <MenuSimple 
-              menuName="Recent" 
-              menuItems={['Task 1', 'Task 2', 'Task 3']} 
-            />
-          </div>
-          <div className="relative">
-            <MenuSimple 
-              menuName="Starred" 
-              menuItems={['Item 1', 'Item 2', 'Item 3']} 
-            />
-          </div>
-        </div>
-
-        {/* Mobile Menu Icon */}
-        <div className="md:hidden flex items-center" ref={menuButtonRef}>
-          <button 
-            onClick={toggleMobileMenu} 
-            className="text-white hover:text-gray-200 focus:outline-none"
-          >
-            <MenuIcon className="h-6 w-6" />
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        <div 
-          ref={mobileMenuRef}
-          className={`md:hidden absolute top-16 left-0 right-0 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 z-20 p-4 shadow-md transition-all duration-300 ease-in-out transform ${isMobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 h-0 w-0 opacity-0 overflow-hidden'}`}
-        >
-          <div className="flex flex-row space-x-4">
-            <MenuSimple 
-              menuName="Workspace" 
-              menuItems={['Project 1', 'Project 2', 'Project 3']} 
-            />
-            <MenuSimple 
-              menuName="Recent" 
-              menuItems={['Task 1', 'Task 2', 'Task 3']} 
-            />
-            <MenuSimple 
-              menuName="Starred" 
-              menuItems={['Item 1', 'Item 2', 'Item 3']} 
-            />
-          </div>
-        </div>
-
         {/* User Profile */}
         <div className="flex text-white items-center space-x-2">
           {user ? (

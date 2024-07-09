@@ -1,5 +1,5 @@
 // app/layout.js
-import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn } from '@clerk/nextjs';
+import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 export default async function RootLayout({ children }) {
 

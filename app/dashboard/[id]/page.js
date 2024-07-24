@@ -25,6 +25,7 @@ const Workspace = ({ params }) => {
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskDeadline, setNewTaskDeadline] = useState('');
+  const [isAllowed, setIsAllowed] = useState(false);
   const [socket, setSocket] = useState(null);
   const SOCKET_SERVER_URL = 'https://task-clerk-backend.onrender.com';
   useEffect(() => {
@@ -116,6 +117,9 @@ const Workspace = ({ params }) => {
       const response = await axios.get(`/api/tasks/${id}`);
       setTasks(response.data.tasks);
       setWorkspaceName(response.data.workspaceName);
+      if(response.data.role != "viewer"){
+        setIsAllowed(true);
+      }
       setLoading(false);
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -219,31 +223,37 @@ const Workspace = ({ params }) => {
       <h1 className="text-3xl font-bold mb-6 text-gray-800">
         <span className="block text-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text">
           {workspaceName}
-        </span>{' '}
-        <span className="block text-center text-3xl font-bold text-gray-900">All Tasks</span>
+        </span>{" "}
+        <span className="block text-center text-3xl font-bold text-gray-900">
+          All Tasks
+        </span>
       </h1>
       {loading && <LoadingSpinner />}
       <div className="flex flex-wrap space-y-2 md:space-y-0 md:space-x-4 mb-4">
         <button
           onClick={toggleNewTaskModal}
+          disabled={!isAllowed}
           className="w-full md:w-auto bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none"
         >
           Add New Task
         </button>
         <button
           onClick={toggleNewCollaboratorsModal}
+          disabled={!isAllowed}
           className="w-full md:w-auto bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none mt-2 md:mt-0"
         >
           Add New Collaborators
         </button>
         <button
           onClick={toggleNewViewsModal}
+          disabled={!isAllowed}
           className="w-full md:w-auto bg-purple-500 text-white py-2 px-4 rounded-md hover:bg-purple-600 focus:outline-none mt-2 md:mt-0"
         >
           Add Viewer
         </button>
         <button
           onClick={toggleDeleteWorkspaceModal}
+          disabled={!isAllowed}
           className="w-full md:w-auto bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none mt-2 md:mt-0"
         >
           Delete Workspace
@@ -251,7 +261,9 @@ const Workspace = ({ params }) => {
         {showDeleteWorkspaceModal && (
           <div className="fixed z-10 inset-0 overflow-y-auto flex items-center justify-center">
             <div className="bg-white rounded-lg p-6 shadow-lg">
-              <p className="text-lg mb-4">Are you sure you want to delete this workspace?</p>
+              <p className="text-lg mb-4">
+                Are you sure you want to delete this workspace?
+              </p>
               <div className="flex justify-end">
                 <button
                   onClick={toggleDeleteWorkspaceModal}
@@ -271,13 +283,15 @@ const Workspace = ({ params }) => {
         )}
       </div>
       <AddCollaboratorsModal
+        isAllowed = {isAllowed}
         collaborators={[]}
         allUsers={allUsers}
-        params = {params}
+        params={params}
         newCollaboratorsModalOpen={newCollaboratorsModalOpen}
         toggleNewCollaboratorsModal={toggleNewCollaboratorsModal}
       />
       <NewTaskModal
+        isAllowed = {isAllowed}
         newTaskModalOpen={newTaskModalOpen}
         toggleNewTaskModal={toggleNewTaskModal}
         newTaskName={newTaskName}
@@ -289,6 +303,7 @@ const Workspace = ({ params }) => {
         setNewTaskDescription={setNewTaskDescription}
       />
       <AddViewerModal
+        isAllowed = {isAllowed}
         newViewsModalOpen={newViewsModalOpen}
         toggleNewViewsModal={toggleNewViewsModal}
         allUsers={allUsers}
@@ -296,20 +311,22 @@ const Workspace = ({ params }) => {
       />
 
       <div className="flex flex-wrap flex-shrink -mx-2">
-            {tasks.map((task) => (
-            <div key={task._id} className="w-full md:w-1/2 lg:w-1/3 p-2">
-                <TaskCard task={task}
-                    handleTaskNameEdit={handleTaskNameEdit}
-                    handleTaskDescriptionEdit = {handleTaskDescriptionEdit}
-                    handleTaskDeadlineEdit = {handleTaskDeadlineEdit}
-                    handleDeleteCard = {handleDeleteCard}
-                    handleAddCard= {handleAddCard}
-                    handleDeleteTask= {handleDeleteTask}
-                    setTasks = {setTasks}
-                />
-            </div>
-            ))}
-        </div>
+        {tasks.map((task) => (
+          <div key={task._id} className="w-full md:w-1/2 lg:w-1/3 p-2">
+            <TaskCard
+              isAllowed = {isAllowed}
+              task={task}
+              handleTaskNameEdit={handleTaskNameEdit}
+              handleTaskDescriptionEdit={handleTaskDescriptionEdit}
+              handleTaskDeadlineEdit={handleTaskDeadlineEdit}
+              handleDeleteCard={handleDeleteCard}
+              handleAddCard={handleAddCard}
+              handleDeleteTask={handleDeleteTask}
+              setTasks={setTasks}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

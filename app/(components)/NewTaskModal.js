@@ -10,11 +10,13 @@ const NewTaskModal = ({
     newTaskDescription,
     setNewTaskDescription,
     handleAddNewTask,
+    isAllowed
 
 }) => {
     const [showEmptyWarning, setShowEmptyWarning] = useState(false);
 
     const handleAddTask = () => {
+        if(!isAllowed) return ;
         if (newTaskName.trim() === '') {
             setShowEmptyWarning(true);
         } else {

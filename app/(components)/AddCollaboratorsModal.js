@@ -66,7 +66,7 @@ const AddCollaboratorsModal = ({
           url: currentUrl,
         });
         setNotificationMessage(response.data.message);
-        if (!response.exist) {
+        if (!response.data.exist) {
           setCollaborators((prevCollaborators) => [...prevCollaborators, user]);
         }
         setShowNotification(true);
@@ -77,7 +77,7 @@ const AddCollaboratorsModal = ({
       }
       // setCollaboratorSearch('');
     },
-    [collaborators]
+    [collaborators,isAllowed]
   );
 
   const handleClickOutside = useCallback(

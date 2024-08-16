@@ -1,33 +1,34 @@
-'use client'
-import React, { useEffect, useState, useCallback } from 'react';
-import axios from 'axios';
-import io from 'socket.io-client';
-import LoadingSpinner from '@/app/(components)/Spinner';
-import AddCollaboratorsModal from '@/app/(components)/AddCollaboratorsModal';
-import NewTaskModal from '@/app/(components)/NewTaskModal';
-import TaskCard from '@/app/(components)/TaskCard';
-import { useRouter } from 'next/navigation';
-import AddViewerModal from '@/app/(components)/AddViewerModal';
-import PopupNotification from '@/app/(components)/PopupNotification';
-
+"use client";
+import React, { useEffect, useState, useCallback } from "react";
+import axios from "axios";
+import io from "socket.io-client";
+import LoadingSpinner from "@/app/(components)/Spinner";
+import AddCollaboratorsModal from "@/app/(components)/AddCollaboratorsModal";
+import NewTaskModal from "@/app/(components)/NewTaskModal";
+import TaskCard from "@/app/(components)/TaskCard";
+import { useRouter } from "next/navigation";
+import AddViewerModal from "@/app/(components)/AddViewerModal";
+import PopupNotification from "@/app/(components)/PopupNotification";
 
 const Workspace = ({ params }) => {
   const router = useRouter();
   const { id } = params;
   const [allUsers, setAllUsers] = useState([]);
   const [tasks, setTasks] = useState([]);
-  const [workspaceName, setWorkspaceName] = useState('');
+  const [workspaceName, setWorkspaceName] = useState("");
   const [loading, setLoading] = useState(false);
   const [newTaskModalOpen, setNewTaskModalOpen] = useState(false);
-  const [newCollaboratorsModalOpen, setNewCollaboratorsModalOpen] = useState(false);
+  const [newCollaboratorsModalOpen, setNewCollaboratorsModalOpen] =
+    useState(false);
   const [newViewsModalOpen, setNewViewsModalOpen] = useState(false);
-  const [showDeleteWorkspaceModal, setShowDeleteWorkspaceModal] = useState(false);
-  const [newTaskName, setNewTaskName] = useState('');
-  const [newTaskDescription, setNewTaskDescription] = useState('');
-  const [newTaskDeadline, setNewTaskDeadline] = useState('');
-  const [isAllowed, setIsAllowed] = useState(false);
+  const [showDeleteWorkspaceModal, setShowDeleteWorkspaceModal] =
+    useState(false);
+  const [newTaskName, setNewTaskName] = useState("");
+  const [newTaskDescription, setNewTaskDescription] = useState("");
+  const [newTaskDeadline, setNewTaskDeadline] = useState("");
+  const [isAllowed, setIsAllowed] = useState(null);
   const [socket, setSocket] = useState(null);
-  const SOCKET_SERVER_URL = 'https://task-clerk-backend.onrender.com';
+  const SOCKET_SERVER_URL = "https://task-clerk-backend.onrender.com";
   useEffect(() => {
     const newSocket = io(SOCKET_SERVER_URL);
     setSocket(newSocket);
@@ -40,26 +41,30 @@ const Workspace = ({ params }) => {
 
   const fetchUsers = useCallback(async () => {
     try {
-        setLoading(true);
-        const usersResponse = await axios.get('/api/get-users');
-        setAllUsers(usersResponse.data.allUsers);
-        setLoading(false);
+      setLoading(true);
+      const usersResponse = await axios.get("/api/get-users");
+      setAllUsers(usersResponse.data.allUsers);
+      setLoading(false);
     } catch (error) {
-        console.error('Error fetching data:', error);
-        setAllUsers([]);
+      console.error("Error fetching data:", error);
+      setAllUsers([]);
     }
-}, []); 
+  }, []);
 
-
-  
   useEffect(() => {
     if (!socket) return;
     const handleTaskUpdated = (updatedTask) => {
-      setTasks((prevTasks) => prevTasks.map(task => task._id === updatedTask._id ? updatedTask : task));
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task._id === updatedTask._id ? updatedTask : task
+        )
+      );
     };
 
     const handleTaskDeleted = (deletedTaskId) => {
-      setTasks((prevTasks) => prevTasks.filter(task => task._id !== deletedTaskId));
+      setTasks((prevTasks) =>
+        prevTasks.filter((task) => task._id !== deletedTaskId)
+      );
     };
 
     const handleTaskAdded = (newTask) => {
@@ -68,7 +73,7 @@ const Workspace = ({ params }) => {
 
     const handleCardAdded = ({ taskId, newCard }) => {
       setTasks((prevTasks) =>
-        prevTasks.map(task => {
+        prevTasks.map((task) => {
           if (task._id === taskId) {
             return { ...task, cards: [...task.cards, newCard] };
           }
@@ -79,34 +84,40 @@ const Workspace = ({ params }) => {
 
     const handleCardDeleted = ({ taskId, cardIndex }) => {
       setTasks((prevTasks) =>
-        prevTasks.map(task => {
+        prevTasks.map((task) => {
           if (task._id === taskId) {
-            return { ...task, cards: task.cards.filter((_, index) => index !== cardIndex) };
+            return {
+              ...task,
+              cards: task.cards.filter((_, index) => index !== cardIndex),
+            };
           }
           return task;
         })
       );
     };
 
-    socket.on('taskUpdated', handleTaskUpdated);
-    socket.on('taskDeleted', handleTaskDeleted);
-    socket.on('taskDescriptionUpdated',(updatedTask)=>{
-        setTasks((prevTasks)=> prevTasks.map(task => task._id ===updatedTask._id? updatedTask: task ));
-    })
-    socket.on('taskAdded', handleTaskAdded);
-    socket.on('workspaceDeleted',()=>{
-      router.push('/dashboard');
-      
-    })
-    socket.on('cardAdded', handleCardAdded);
-    socket.on('cardDeleted', handleCardDeleted);
+    socket.on("taskUpdated", handleTaskUpdated);
+    socket.on("taskDeleted", handleTaskDeleted);
+    socket.on("taskDescriptionUpdated", (updatedTask) => {
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task._id === updatedTask._id ? updatedTask : task
+        )
+      );
+    });
+    socket.on("taskAdded", handleTaskAdded);
+    socket.on("workspaceDeleted", () => {
+      router.push("/dashboard");
+    });
+    socket.on("cardAdded", handleCardAdded);
+    socket.on("cardDeleted", handleCardDeleted);
 
     return () => {
-      socket.off('taskUpdated', handleTaskUpdated);
-      socket.off('taskDeleted', handleTaskDeleted);
-      socket.off('taskAdded', handleTaskAdded);
-      socket.off('cardAdded', handleCardAdded);
-      socket.off('cardDeleted', handleCardDeleted);
+      socket.off("taskUpdated", handleTaskUpdated);
+      socket.off("taskDeleted", handleTaskDeleted);
+      socket.off("taskAdded", handleTaskAdded);
+      socket.off("cardAdded", handleCardAdded);
+      socket.off("cardDeleted", handleCardDeleted);
     };
   }, [socket]);
 
@@ -117,13 +128,13 @@ const Workspace = ({ params }) => {
       const response = await axios.get(`/api/tasks/${id}`);
       setTasks(response.data.tasks);
       setWorkspaceName(response.data.workspaceName);
-      if(response.data.role != "viewer"){
+      if (response.data.role != "viewer") {
         setIsAllowed(true);
       }
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
-    } 
+      console.error("Error fetching tasks:", error);
+    }
   }, [id]);
 
   useEffect(() => {
@@ -131,80 +142,84 @@ const Workspace = ({ params }) => {
   }, [fetchTasks]);
 
   // Handlers for socket operations
-  const handleTaskNameEdit = async(taskId, newName) => {
+  const handleTaskNameEdit = async (taskId, newName) => {
     try {
-      socket.emit('editTask', { id: taskId, name: newName });
+      socket.emit("editTask", { id: taskId, name: newName });
     } catch (error) {
-      console.error('Error updating task name:', error);
+      console.error("Error updating task name:", error);
     }
   };
-// working 
-  const handleTaskDescriptionEdit = async(taskId, newDescription) => {
+  // working
+  const handleTaskDescriptionEdit = async (taskId, newDescription) => {
     try {
-      socket.emit('editTaskDescription', { id: taskId, description: newDescription });
+      socket.emit("editTaskDescription", {
+        id: taskId,
+        description: newDescription,
+      });
     } catch (err) {
-      console.error('Error in updating description:', err);
+      console.error("Error in updating description:", err);
     }
   };
 
   const handleTaskDeadlineEdit = (taskId, newDeadline) => {
     try {
-      socket.emit('editTaskDeadline', { id: taskId, deadline: newDeadline });
+      socket.emit("editTaskDeadline", { id: taskId, deadline: newDeadline });
     } catch (error) {
-      console.error('Error updating task deadline:', error);
+      console.error("Error updating task deadline:", error);
     }
   };
 
-  const handleAddCard = (taskId,newCardText) => {
+  const handleAddCard = (taskId, newCardText) => {
     try {
-      socket.emit('addCard', { taskId, newCardText});
+      socket.emit("addCard", { taskId, newCardText });
     } catch (error) {
-      console.error('Error adding card:', error);
+      console.error("Error adding card:", error);
     }
   };
 
   const handleDeleteTask = (taskId) => {
     try {
-      socket.emit('deleteTask', { id: taskId });
+      socket.emit("deleteTask", { id: taskId });
     } catch (error) {
-      console.error('Error deleting task:', error);
+      console.error("Error deleting task:", error);
     }
   };
 
   const handleAddNewTask = () => {
-    
     const newTask = {
       name: newTaskName,
       description: newTaskDescription,
       deadline: newTaskDeadline,
-      priority: 'low',
-      status: 'pending',
+      priority: "low",
+      status: "pending",
       cards: [],
       workspaceId: id,
     };
     try {
-      socket.emit('addTask', newTask);
-      setNewTaskDescription('');
-      setNewTaskName('');
-      setNewTaskDeadline('');
+      socket.emit("addTask", newTask);
+      setNewTaskDescription("");
+      setNewTaskName("");
+      setNewTaskDeadline("");
       setNewTaskModalOpen(false);
     } catch (error) {
-      console.error('Error adding new task:', error);
+      console.error("Error adding new task:", error);
     }
   };
 
   const handleDeleteCard = (taskId, cardId) => {
     try {
-      socket.emit('deleteCard', { taskId, cardId });
+      socket.emit("deleteCard", { taskId, cardId });
     } catch (error) {
-      console.error('Error deleting card:', error);
+      console.error("Error deleting card:", error);
     }
   };
 
   const toggleNewTaskModal = () => setNewTaskModalOpen(!newTaskModalOpen);
-  const toggleNewCollaboratorsModal = () => setNewCollaboratorsModalOpen(!newCollaboratorsModalOpen);
+  const toggleNewCollaboratorsModal = () =>
+    setNewCollaboratorsModalOpen(!newCollaboratorsModalOpen);
   const toggleNewViewsModal = () => setNewViewsModalOpen(!newViewsModalOpen);
-  const toggleDeleteWorkspaceModal = () => setShowDeleteWorkspaceModal(!showDeleteWorkspaceModal);
+  const toggleDeleteWorkspaceModal = () =>
+    setShowDeleteWorkspaceModal(!showDeleteWorkspaceModal);
 
   const handleDeleteWorkspace = async () => {
     try {
@@ -212,11 +227,10 @@ const Workspace = ({ params }) => {
       const response = await axios.post(`/api/delete-workspace`, { id: id });
       setShowDeleteWorkspaceModal(false);
       socket.emit("deleteWorkspace", { workspaceId: id });
-    
     } catch (error) {
-        console.error('Error deleting workspace:', error);
+      console.error("Error deleting workspace:", error);
     }
-};
+  };
 
   return (
     <div className="p-2 h-screen md:h-[87vh] overflow-scroll">
@@ -283,7 +297,7 @@ const Workspace = ({ params }) => {
         )}
       </div>
       <AddCollaboratorsModal
-        isAllowed = {isAllowed}
+        isAllowed={isAllowed}
         collaborators={[]}
         allUsers={allUsers}
         params={params}
@@ -291,7 +305,7 @@ const Workspace = ({ params }) => {
         toggleNewCollaboratorsModal={toggleNewCollaboratorsModal}
       />
       <NewTaskModal
-        isAllowed = {isAllowed}
+        isAllowed={isAllowed}
         newTaskModalOpen={newTaskModalOpen}
         toggleNewTaskModal={toggleNewTaskModal}
         newTaskName={newTaskName}
@@ -303,7 +317,7 @@ const Workspace = ({ params }) => {
         setNewTaskDescription={setNewTaskDescription}
       />
       <AddViewerModal
-        isAllowed = {isAllowed}
+        isAllowed={isAllowed}
         newViewsModalOpen={newViewsModalOpen}
         toggleNewViewsModal={toggleNewViewsModal}
         allUsers={allUsers}
@@ -314,7 +328,7 @@ const Workspace = ({ params }) => {
         {tasks.map((task) => (
           <div key={task._id} className="w-full md:w-1/2 lg:w-1/3 p-2">
             <TaskCard
-              isAllowed = {isAllowed}
+              isAllowed={isAllowed}
               task={task}
               handleTaskNameEdit={handleTaskNameEdit}
               handleTaskDescriptionEdit={handleTaskDescriptionEdit}

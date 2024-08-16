@@ -50,7 +50,7 @@ export async function GET(req, res) {
       const isViewer = workspace.viewers.some((viewerId) =>
         viewerId.equals(userMongoose._id)
       );
-
+     
       if (isAdmin || isCollaborator || isViewer) {
         return NextResponse.json({
           success: true,

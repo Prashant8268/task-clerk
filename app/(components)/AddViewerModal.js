@@ -76,7 +76,7 @@ const AddViewerModal = ({
       }
       // setViewSearch('');
     },
-    [views, workspaceId]
+    [views, workspaceId,isAllowed]
   );
 
   const handleClickOutside = useCallback(

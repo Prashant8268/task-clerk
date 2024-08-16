@@ -1,11 +1,11 @@
-import React from 'react';
+import React from "react";
 
 const LoadingSpinner = () => (
-    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-100000 ">
-        <div className="spinner"></div>
-    </div>
+  <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center z-50 bg-white bg-opacity-70">
+    <div className="spinner"></div>
+  </div>
 );
 
-LoadingSpinner.displayName = 'Spinner';
+LoadingSpinner.displayName = "Spinner";
 
 export default LoadingSpinner;

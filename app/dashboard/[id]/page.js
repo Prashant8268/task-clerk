@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import AddViewerModal from "@/app/(components)/AddViewerModal";
 import PopupNotification from "@/app/(components)/PopupNotification";
 
+const SOCKET_SERVER_URL = "https://task-clerk-backend.onrender.com/tasks";
 const Workspace = ({ params }) => {
   const router = useRouter();
   const { id } = params;
@@ -28,7 +29,6 @@ const Workspace = ({ params }) => {
   const [newTaskDeadline, setNewTaskDeadline] = useState("");
   const [isAllowed, setIsAllowed] = useState(null);
   const [socket, setSocket] = useState(null);
-  const SOCKET_SERVER_URL = "https://task-clerk-backend.onrender.com";
   useEffect(() => {
     const newSocket = io(SOCKET_SERVER_URL);
     setSocket(newSocket);
